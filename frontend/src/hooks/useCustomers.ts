@@ -10,7 +10,7 @@ const MOCK_CLIENTS: Customer[] = [
 
 export const useCustomers = () => {
     const [clientsList, setClientsList] = useState<Customer[]>(MOCK_CLIENTS);
-    const [selectedClient, setSelectedClient] = useState<Customer>({ id: "0", name: "Sin nombre", address: "C/ San Onofre 31" });
+    const [selectedClient, setSelectedClient] = useState<Customer>({ id: "0", name: "Sin nombre", address: "C/ Sin nombre" });
     const [isClientModalOpen, setIsClientModalOpen] = useState(false);
     const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
     const [clientSearchQuery, setClientSearchQuery] = useState("");
@@ -28,7 +28,7 @@ export const useCustomers = () => {
     };
 
     const deselectClient = () => {
-        setSelectedClient({ id: "0", name: "Sin nombre", address: "C/ San Onofre 31" });
+        setSelectedClient({ id: "0", name: "Sin nombre", address: "C/ Sin nombre" });
     };
 
     return {

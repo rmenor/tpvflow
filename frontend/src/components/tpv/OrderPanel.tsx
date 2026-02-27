@@ -141,7 +141,7 @@ export function OrderPanel({
                                 {/* Botón para Desmarcar Cliente */}
                                 {selectedClient && selectedClient.name !== "Sin nombre" && (
                                     <button
-                                        onClick={() => setSelectedClient({ id: "0", name: "Sin nombre", address: "C/ San Onofre 31" })}
+                                        onClick={() => setSelectedClient({ id: "0", name: "Sin nombre", address: "C/ Sin nombre" })}
                                         className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white hover:text-indigo-600 transition-colors"
                                         title="Desmarcar cliente"
                                     >

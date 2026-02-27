@@ -50,7 +50,7 @@ export default function TPVPage() {
 
   const { cart, setCart, addToCart, removeFromCart, clearCart, total } = useCart();
   const {
-    clientsList, selectedClient, setSelectedClient,
+    clientsList, selectedClient, setSelectedClient, deselectClient,
     isClientModalOpen, setIsClientModalOpen,
     isNewClientModalOpen, setIsNewClientModalOpen,
     clientSearchQuery, setClientSearchQuery,
@@ -117,7 +117,7 @@ export default function TPVPage() {
     clearCart();
     setTableNumber("");
     setDinersCount(2);
-    setSelectedClient({ id: "0", name: "Sin nombre", address: "C/ San Onofre 31" });
+    setSelectedClient({ id: "0", name: "Sin nombre", address: "C/ Sin nombre" });
   };
 
   const handleChargeOrder = () => {
