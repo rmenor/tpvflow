@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { EmployeeModal } from "../../components/modals/EmployeeModal";
 import { Header } from "../../components/layout/Header";
+import { format, startOfWeek, addDays, getDaysInMonth, startOfMonth, addMonths, subMonths, isSameDay, startOfDay, addWeeks, subWeeks, addDays as addDaysToDate, subDays } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface Reservation {
     id: string;
@@ -14,9 +16,12 @@ interface Reservation {
     phone: string;
 }
 
+type ViewMode = "month" | "week" | "day";
+
 export default function ReservasPage() {
-    const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0]);
-    const [calendarDate, setCalendarDate] = useState<Date>(new Date());
+    const [selectedDate, setSelectedDate] = useState<Date>(startOfDay(new Date()));
+    const [currentDate, setCurrentDate] = useState<Date>(startOfDay(new Date()));
+    const [viewMode, setViewMode] = useState<ViewMode>("day");
 
     // Employee State
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -26,7 +31,7 @@ export default function ReservasPage() {
     const [reservations, setReservations] = useState<Reservation[]>([
         {
             id: "1",
-            date: new Date().toISOString().split("T")[0],
+            date: format(new Date(), 'yyyy-MM-dd'),
             time: "14:00",
             name: "Juan Pérez",
             partySize: 4,
@@ -35,7 +40,7 @@ export default function ReservasPage() {
         },
         {
             id: "2",
-            date: new Date().toISOString().split("T")[0],
+            date: format(new Date(), 'yyyy-MM-dd'),
             time: "21:30",
             name: "Maria García",
             partySize: 2,
@@ -46,12 +51,14 @@ export default function ReservasPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newReservation, setNewReservation] = useState<{
+        date: string; // The selected date for the new reservation
         time: string;
         name: string;
         partySize: number;
         tableNumber: string;
         phone: string;
     }>({
+        date: format(new Date(), 'yyyy-MM-dd'),
         time: "14:00",
         name: "",
         partySize: 2,
@@ -67,20 +74,29 @@ export default function ReservasPage() {
         }
     }, []);
 
-    const dailyReservations = reservations.filter((r) => r.date === selectedDate).sort((a, b) => a.time.localeCompare(b.time));
+    // When opening the modal, default the reservation date to the currently inspected date
+    const handleOpenModal = () => {
+        setNewReservation(prev => ({ ...prev, date: format(selectedDate, 'yyyy-MM-dd') }));
+        setIsModalOpen(true);
+    };
 
     const handleSaveReservation = () => {
-        if (!newReservation.name || !newReservation.time || !newReservation.tableNumber) return;
+        if (!newReservation.name || !newReservation.time || !newReservation.tableNumber || !newReservation.date) return;
 
         const newRes: Reservation = {
             id: Date.now().toString(),
-            date: selectedDate,
-            ...newReservation,
+            date: newReservation.date,
+            time: newReservation.time,
+            name: newReservation.name,
+            partySize: newReservation.partySize,
+            tableNumber: newReservation.tableNumber,
+            phone: newReservation.phone,
         };
 
         setReservations((prev) => [...prev, newRes]);
         setIsModalOpen(false);
         setNewReservation({
+            date: format(selectedDate, 'yyyy-MM-dd'),
             time: "14:00",
             name: "",
             partySize: 2,
@@ -94,28 +110,205 @@ export default function ReservasPage() {
         setCurrentEmployee(null);
     };
 
-    // Calendar logic
-    const daysInMonth = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 0).getDate();
-    const firstDayOfMonth = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 1).getDay();
-    const startOffset = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1; // 0 for Monday, 6 for Sunday
-    const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    // --- Navigation Logic ---
+    const goPrev = () => {
+        if (viewMode === "month") setCurrentDate(subMonths(currentDate, 1));
+        if (viewMode === "week") setCurrentDate(subWeeks(currentDate, 1));
+        if (viewMode === "day") {
+            const prev = subDays(currentDate, 1);
+            setCurrentDate(prev);
+            setSelectedDate(prev);
+        }
+    };
 
-    const calendarGrid = [];
-    for (let i = 0; i < startOffset; i++) {
-        calendarGrid.push(null);
-    }
-    for (let i = 1; i <= daysInMonth; i++) {
-        const dateObj = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), i);
-        // Correct time zone offset issues by constructing ISO string manually
-        const year = dateObj.getFullYear();
-        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-        const day = String(dateObj.getDate()).padStart(2, '0');
-        const dateString = `${year}-${month}-${day}`;
-        calendarGrid.push({ dateObj, dateString, day: i });
-    }
+    const goNext = () => {
+        if (viewMode === "month") setCurrentDate(addMonths(currentDate, 1));
+        if (viewMode === "week") setCurrentDate(addWeeks(currentDate, 1));
+        if (viewMode === "day") {
+            const next = addDaysToDate(currentDate, 1);
+            setCurrentDate(next);
+            setSelectedDate(next);
+        }
+    };
 
-    const prevMonth = () => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1));
-    const nextMonth = () => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1));
+    const goToday = () => {
+        const today = startOfDay(new Date());
+        setCurrentDate(today);
+        setSelectedDate(today);
+    };
+
+    // --- Render Helpers ---
+
+    const getDailyReservations = (date: Date) => {
+        const dateStr = format(date, 'yyyy-MM-dd');
+        return reservations.filter((r) => r.date === dateStr).sort((a, b) => a.time.localeCompare(b.time));
+    };
+
+    const renderMonthView = () => {
+        const firstDay = startOfMonth(currentDate);
+        const daysInMonth = getDaysInMonth(currentDate);
+        const startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; // 0 is Monday
+
+        const grid = [];
+        for (let i = 0; i < startOffset; i++) grid.push(null);
+        for (let i = 1; i <= daysInMonth; i++) {
+            grid.push(new Date(currentDate.getFullYear(), currentDate.getMonth(), i));
+        }
+
+        return (
+            <div className="flex-1 flex flex-col border border-slate-200/60 rounded-3xl overflow-hidden bg-white shadow-sm mt-6">
+                <div className="grid grid-cols-7 bg-slate-50 border-b border-slate-200/60">
+                    {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((day, i) => (
+                        <div key={i} className={`py-4 text-center text-sm font-black uppercase tracking-widest ${i >= 5 ? 'text-indigo-600' : 'text-slate-500'}`}>
+                            {day}
+                        </div>
+                    ))}
+                </div>
+                <div className="grid grid-cols-7 auto-rows-[6rem] bg-slate-100/50 gap-[1px] flex-1">
+                    {grid.map((date, index) => {
+                        if (!date) return <div key={`empty-${index}`} className="bg-white/40"></div>;
+
+                        const isSelected = isSameDay(date, selectedDate);
+                        const isToday = isSameDay(date, new Date());
+                        const dayRes = getDailyReservations(date);
+
+                        return (
+                            <button
+                                key={index}
+                                onClick={() => {
+                                    setSelectedDate(date);
+                                    // Optionally switch to day view when a day is clicked
+                                    // setViewMode("day"); 
+                                    // setCurrentDate(date);
+                                }}
+                                className={`relative bg-white flex flex-col p-2 transition-all hover:bg-indigo-50 group border border-transparent ${isSelected ? 'ring-2 ring-indigo-600 ring-inset bg-indigo-50/30 font-bold' : ''}`}
+                            >
+                                <span className={`text-sm font-bold w-7 h-7 flex items-center justify-center rounded-full mb-1 transition-colors ${isToday && !isSelected ? 'bg-indigo-600 text-white shadow-sm' : isSelected ? 'text-indigo-700' : 'text-slate-700'}`}>
+                                    {format(date, 'd')}
+                                </span>
+                                <div className="flex flex-col gap-1 w-full overflow-hidden text-left">
+                                    {dayRes.slice(0, 2).map((r, i) => (
+                                        <div key={i} className="text-[10px] font-bold text-slate-600 bg-slate-100 rounded px-1.5 py-0.5 truncate border border-slate-200">
+                                            {r.time} - {r.partySize}p
+                                        </div>
+                                    ))}
+                                    {dayRes.length > 2 && (
+                                        <div className="text-[10px] font-bold text-indigo-500 pl-1">+{dayRes.length - 2} más</div>
+                                    )}
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    };
+
+    const renderWeekView = () => {
+        const start = startOfWeek(currentDate, { weekStartsOn: 1 }); // Monday
+        const days = Array.from({ length: 7 }).map((_, i) => addDays(start, i));
+
+        return (
+            <div className="flex-1 flex flex-col border border-slate-200/60 rounded-3xl overflow-hidden bg-white shadow-sm mt-6">
+                <div className="grid grid-cols-7 bg-slate-50 border-b border-slate-200/60">
+                    {days.map((date, i) => {
+                        const isToday = isSameDay(date, new Date());
+                        return (
+                            <div key={i} className={`py-4 text-center border-l first:border-l-0 border-slate-200/60 ${isToday ? 'bg-indigo-50/50' : ''}`}>
+                                <div className={`text-xs font-black uppercase tracking-widest mb-1 ${i >= 5 ? 'text-indigo-600' : 'text-slate-500'}`}>
+                                    {format(date, 'E', { locale: es })}
+                                </div>
+                                <div className={`text-2xl font-black ${isToday ? 'text-indigo-600' : 'text-slate-800'}`}>
+                                    {format(date, 'd')}
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+                <div className="grid grid-cols-7 flex-1 bg-slate-100/50 gap-[1px]">
+                    {days.map((date, i) => {
+                        const dayRes = getDailyReservations(date);
+                        return (
+                            <div key={i} className="bg-white p-2 overflow-y-auto relative h-full min-h-[400px]">
+                                <div className="flex flex-col gap-2">
+                                    {dayRes.map(res => (
+                                        <div key={res.id} onClick={() => { setSelectedDate(date); }} className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all group">
+                                            <div className="flex justify-between items-center mb-1">
+                                                <span className="font-black text-indigo-600 text-sm">{res.time}</span>
+                                                <span className="bg-white border border-slate-200 text-slate-500 text-[10px] font-bold px-1.5 py-0.5 rounded-md">M{res.tableNumber}</span>
+                                            </div>
+                                            <div className="font-bold text-slate-800 text-sm truncate">{res.name}</div>
+                                            <div className="text-xs font-bold text-slate-500 mt-1 flex items-center gap-1">
+                                                <svg className="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                                                {res.partySize} px
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {dayRes.length === 0 && (
+                                        <div className="text-center text-slate-300 text-xs font-medium py-4">Sin reservas</div>
+                                    )}
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+            </div>
+        )
+    };
+
+    const renderDayView = () => {
+        const dayRes = getDailyReservations(selectedDate);
+        return (
+            <div className="flex-1 overflow-y-auto mt-6">
+                {dayRes.length === 0 ? (
+                    <div className="bg-white rounded-3xl p-12 text-center border border-slate-200/60 shadow-sm flex flex-col items-center justify-center min-h-[400px]">
+                        <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+                            <svg className="w-12 h-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-800 mb-2">Día libre de reservas</h3>
+                        <p className="text-slate-500 font-medium max-w-sm">No se han encontrado reservas para este día. Haz clic en "Nueva Reserva" para añadir una.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-20">
+                        {dayRes.map((res) => (
+                            <div key={res.id} className="bg-white border border-slate-200/80 rounded-[28px] p-6 shadow-[0_4px_24px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.04)] transition-all relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-50/80 to-indigo-100/30 rounded-bl-[100px] -z-10 transition-transform group-hover:scale-110"></div>
+
+                                <div className="flex justify-between items-start mb-5">
+                                    <div className="bg-indigo-600 text-white font-black text-2xl tracking-tighter px-4 py-2 rounded-[18px] shadow-sm flex items-center gap-2">
+                                        <svg className="w-5 h-5 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                        {res.time}
+                                    </div>
+                                    <div className="bg-slate-100 text-slate-600 font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-2 border border-slate-200/50">
+                                        <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                        {res.partySize} PAX
+                                    </div>
+                                </div>
+
+                                <h3 className="text-xl font-bold text-slate-900 mb-1">{res.name}</h3>
+                                <p className="text-slate-500 font-medium mb-6 flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                    {res.phone || "Sin teléfono"}
+                                </p>
+
+                                <div className="pt-4 border-t border-slate-100 flex justify-between items-center mt-auto">
+                                    <span className="text-[12px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+                                        Mesa Asignada
+                                    </span>
+                                    <span className="text-2xl font-black text-indigo-700 bg-indigo-50 border border-indigo-100 px-4 py-1.5 rounded-[14px] shadow-inner">{res.tableNumber}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col font-sans selection:bg-indigo-100 h-screen overflow-hidden">
@@ -124,164 +317,84 @@ export default function ReservasPage() {
                 onOpenEmployeeModal={() => setIsEmployeeModalOpen(true)}
             />
 
-            {/* Main Content */}
-            <main className="flex-1 flex overflow-hidden relative z-0">
-                {/* Sidebar / Full Calendar */}
-                <aside className="w-[500px] bg-white border-r border-slate-200/60 p-6 flex flex-col gap-6 overflow-y-auto shrink-0 z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-                    <div>
-                        <h2 className="text-2xl font-black text-slate-900 mb-1">Calendario de Reservas</h2>
-                        <p className="text-sm font-medium text-slate-500 mb-6">Selecciona el día para organizar los comensales.</p>
+            <main className="flex-1 flex flex-col p-8 overflow-hidden relative z-0">
 
-                        {/* Selector de mes */}
-                        <div className="flex items-center justify-between mb-4 bg-slate-50 p-2 rounded-2xl border border-slate-100">
-                            <button onClick={prevMonth} className="w-10 h-10 flex items-center justify-center text-slate-600 bg-white rounded-xl shadow-sm hover:text-indigo-600 hover:bg-indigo-50 transition-colors border border-slate-200/60">
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg>
-                            </button>
-                            <span className="font-black text-lg text-slate-800 tracking-tight flex items-center gap-2">
-                                <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                {monthNames[calendarDate.getMonth()]} {calendarDate.getFullYear()}
-                            </span>
-                            <button onClick={nextMonth} className="w-10 h-10 flex items-center justify-center text-slate-600 bg-white rounded-xl shadow-sm hover:text-indigo-600 hover:bg-indigo-50 transition-colors border border-slate-200/60">
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
-                            </button>
+                {/* Header Controls */}
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-2 shrink-0">
+                    <div className="flex items-center gap-4 bg-white p-2 rounded-[20px] shadow-sm border border-slate-200/60">
+                        <button onClick={goPrev} className="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors">
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+                        </button>
+
+                        <div className="flex flex-col items-center min-w-[200px]">
+                            {viewMode === "month" && (
+                                <span className="font-black text-2xl text-slate-800 tracking-tight capitalize">
+                                    {format(currentDate, "MMMM yyyy", { locale: es })}
+                                </span>
+                            )}
+                            {viewMode === "week" && (
+                                <span className="font-black text-xl text-slate-800 tracking-tight">
+                                    {format(startOfWeek(currentDate, { weekStartsOn: 1 }), "d MMM", { locale: es })} - {format(addDays(startOfWeek(currentDate, { weekStartsOn: 1 }), 6), "d MMM yyyy", { locale: es })}
+                                </span>
+                            )}
+                            {viewMode === "day" && (
+                                <span className="font-black text-2xl text-slate-800 tracking-tight capitalize">
+                                    {format(currentDate, "EEEE, d 'de' MMMM", { locale: es })}
+                                </span>
+                            )}
                         </div>
 
-                        {/* Cuadrícula del mes */}
-                        <div className="border border-slate-200/60 rounded-3xl overflow-hidden bg-white shadow-sm">
-                            <div className="grid grid-cols-7 bg-slate-50 border-b border-slate-200/60">
-                                {["L", "M", "X", "J", "V", "S", "D"].map((day, i) => (
-                                    <div key={`header-${i}`} className={`py-3 text-center text-xs font-black uppercase tracking-widest ${i >= 5 ? 'text-indigo-600' : 'text-slate-400'}`}>
-                                        {day}
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="grid grid-cols-7 auto-rows-[4rem] bg-slate-100/50 gap-[1px]">
-                                {calendarGrid.map((item, index) => {
-                                    if (!item) {
-                                        return <div key={`empty-${index}`} className="bg-white/40"></div>;
-                                    }
-                                    const { dateString, day } = item;
-                                    const isSelected = selectedDate === dateString;
-                                    const isToday = new Date().toISOString().split("T")[0] === dateString;
-                                    const dayReservations = reservations.filter(r => r.date === dateString);
+                        <button onClick={goNext} className="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors">
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                        </button>
 
-                                    return (
-                                        <button
-                                            key={dateString}
-                                            onClick={() => setSelectedDate(dateString)}
-                                            className={`relative bg-white flex flex-col items-center justify-center transition-all p-1 hover:bg-indigo-50 group hover:z-10 ${isSelected ? 'ring-2 ring-indigo-600 ring-inset bg-indigo-50/50 shadow-inner' : ''}`}
-                                        >
-                                            <span className={`text-sm font-bold w-7 h-7 flex items-center justify-center rounded-full mb-1 transition-colors ${isToday && !isSelected
-                                                ? 'bg-indigo-600 text-white shadow-sm'
-                                                : isSelected
-                                                    ? 'text-indigo-700'
-                                                    : 'text-slate-700 group-hover:text-indigo-600'
-                                                }`}>
-                                                {day}
-                                            </span>
-
-                                            {/* Indicadores de reserva */}
-                                            {dayReservations.length > 0 && (
-                                                <div className="flex gap-0.5 justify-center flex-wrap px-1 max-w-full">
-                                                    {dayReservations.slice(0, 3).map((_, i) => (
-                                                        <div key={i} className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-indigo-600' : 'bg-slate-400 group-hover:bg-indigo-400'}`}></div>
-                                                    ))}
-                                                    {dayReservations.length > 3 && (
-                                                        <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-indigo-600' : 'bg-slate-400 group-hover:bg-indigo-400'} flex items-center justify-center text-[5px] text-white font-bold leading-none`}>+</div>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
+                        <div className="w-px h-8 bg-slate-200 mx-2"></div>
+                        <button onClick={goToday} className="px-4 py-2 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-colors">
+                            Hoy
+                        </button>
                     </div>
 
-                    <div className="bg-indigo-600 rounded-3xl p-6 flex-1 flex flex-col justify-center items-center text-center text-white relative overflow-hidden shadow-lg shadow-indigo-600/20">
-                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-                        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-indigo-900/30 rounded-full blur-2xl"></div>
-
-                        <h3 className="font-bold text-indigo-100 mb-1 z-10">Total Reservas del Día</h3>
-                        <p className="text-white text-sm font-medium opacity-90 mb-4 z-10">
-                            {new Date(selectedDate).toLocaleDateString("es-ES", { weekday: "long", day: "numeric" })} de {monthNames[new Date(selectedDate).getMonth()]}
-                        </p>
-                        <div className="z-10 flex items-center gap-3">
-                            <span className="text-5xl font-black">{dailyReservations.length}</span>
-                        </div>
-                    </div>
-                </aside>
-
-                {/* Reservations List */}
-                <section className="flex-1 p-8 overflow-y-auto bg-slate-50/50 h-full relative z-0">
-                    <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-slate-100/50 to-transparent pointer-events-none z-10"></div>
-                    <div className="max-w-4xl mx-auto relative z-20 pb-20">
-                        <div className="flex justify-between items-center mb-8 sticky top-0 bg-slate-50/80 backdrop-blur-md pt-2 pb-6 z-30">
-                            <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-                                Reservas Programadas
-                            </h1>
+                    <div className="flex items-center gap-4">
+                        <div className="flex bg-slate-200/50 p-1.5 rounded-[20px]">
                             <button
-                                onClick={() => setIsModalOpen(true)}
-                                className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                                onClick={() => { setViewMode("day"); setCurrentDate(selectedDate); }}
+                                className={`px-6 py-2.5 text-sm font-bold rounded-2xl transition-all ${viewMode === "day" ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                             >
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                                </svg>
-                                Nueva Reserva
+                                Día
+                            </button>
+                            <button
+                                onClick={() => setViewMode("week")}
+                                className={`px-6 py-2.5 text-sm font-bold rounded-2xl transition-all ${viewMode === "week" ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                Semana
+                            </button>
+                            <button
+                                onClick={() => setViewMode("month")}
+                                className={`px-6 py-2.5 text-sm font-bold rounded-2xl transition-all ${viewMode === "month" ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                Mes
                             </button>
                         </div>
-
-                        {dailyReservations.length === 0 ? (
-                            <div className="bg-white rounded-3xl p-12 text-center border border-slate-200/60 shadow-sm flex flex-col items-center justify-center min-h-[400px]">
-                                <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6">
-                                    <svg className="w-12 h-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
-                                </div>
-                                <h3 className="text-xl font-bold text-slate-800 mb-2">Día libre de reservas</h3>
-                                <p className="text-slate-500 font-medium max-w-sm">No se han encontrado reservas para este día. Haz clic en "Nueva Reserva" para añadir una y empezar a llenar la mesa.</p>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {dailyReservations.map((res) => (
-                                    <div key={res.id} className="bg-white border border-slate-200/80 rounded-[28px] p-6 shadow-[0_4px_24px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.04)] transition-all relative overflow-hidden group">
-                                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-50/80 to-indigo-100/30 rounded-bl-[100px] -z-10 transition-transform group-hover:scale-110"></div>
-
-                                        <div className="flex justify-between items-start mb-5">
-                                            <div className="bg-indigo-600 text-white font-black text-2xl tracking-tighter px-4 py-2 rounded-[18px] shadow-sm flex items-center gap-2">
-                                                <svg className="w-5 h-5 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                                {res.time}
-                                            </div>
-                                            <div className="bg-slate-100 text-slate-600 font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-2 border border-slate-200/50">
-                                                <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                </svg>
-                                                {res.partySize} PAX
-                                            </div>
-                                        </div>
-
-                                        <h3 className="text-xl font-bold text-slate-900 mb-1">{res.name}</h3>
-                                        <p className="text-slate-500 font-medium mb-6 flex items-center gap-2">
-                                            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                                            {res.phone || "Sin teléfono"}
-                                        </p>
-
-                                        <div className="pt-4 border-t border-slate-100 flex justify-between items-center mt-auto">
-                                            <span className="text-[12px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
-                                                Mesa Asignada
-                                            </span>
-                                            <span className="text-2xl font-black text-indigo-700 bg-indigo-50 border border-indigo-100 px-4 py-1.5 rounded-[14px] shadow-inner">{res.tableNumber}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                        <button
+                            onClick={handleOpenModal}
+                            className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-[20px] shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-colors flex items-center gap-2 h-[52px]"
+                        >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                            </svg>
+                            Nueva Reserva
+                        </button>
                     </div>
-                </section>
+                </div>
+
+                {/* View Container */}
+                {viewMode === "month" && renderMonthView()}
+                {viewMode === "week" && renderWeekView()}
+                {viewMode === "day" && renderDayView()}
+
             </main>
 
-            {/* New Reservation Modal */}
+            {/* New Reservation Modal - WITH DATE SELECTOR */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
                     <div className="bg-white rounded-[32px] w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200/50">
@@ -298,6 +411,18 @@ export default function ReservasPage() {
                         </div>
 
                         <div className="p-8 space-y-6">
+
+                            {/* NEW: Date Selector */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-2">Fecha de la Reserva</label>
+                                <input
+                                    type="date"
+                                    className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-2xl px-5 py-3.5 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all shadow-inner"
+                                    value={newReservation.date}
+                                    onChange={(e) => setNewReservation({ ...newReservation, date: e.target.value })}
+                                />
+                            </div>
+
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-2">Hora</label>
@@ -374,8 +499,8 @@ export default function ReservasPage() {
                             </button>
                             <button
                                 onClick={handleSaveReservation}
-                                disabled={!newReservation.name || !newReservation.time || !newReservation.tableNumber}
-                                className={`flex-1 py-4 font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 ${(!newReservation.name || !newReservation.time || !newReservation.tableNumber)
+                                disabled={!newReservation.name || !newReservation.time || !newReservation.tableNumber || !newReservation.date}
+                                className={`flex-1 py-4 font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 ${(!newReservation.name || !newReservation.time || !newReservation.tableNumber || !newReservation.date)
                                     ? 'bg-slate-300 text-slate-50 shadow-none cursor-not-allowed'
                                     : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-indigo-600/30'
                                     }`}
@@ -403,3 +528,4 @@ export default function ReservasPage() {
         </div>
     );
 }
+

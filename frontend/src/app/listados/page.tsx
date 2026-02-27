@@ -34,13 +34,13 @@ export default function ListadosPage() {
 
     const savedParked = localStorage.getItem("parked_orders");
     if (savedParked) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setParkedOrders(JSON.parse(savedParked));
     }
 
     const savedPaid = localStorage.getItem("paid_orders");
     if (savedPaid) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setPaidOrders(JSON.parse(savedPaid));
     }
   }, []);
