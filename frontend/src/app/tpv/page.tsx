@@ -43,19 +43,8 @@ function TPVContent() {
     newClientData, setNewClientData, handleSaveNewClient
   } = useCustomers();
 
-  const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem("current_employee");
-      return saved ? JSON.parse(saved) : null;
-    }
-    return null;
-  });
-  const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return !localStorage.getItem("current_employee");
-    }
-    return true;
-  });
+  const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
+  const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);
 
   // Modales adicionales
   const [isIngredientsModalOpen, setIsIngredientsModalOpen] = useState(false);
@@ -68,6 +57,14 @@ function TPVContent() {
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Load employee from localStorage (Client-only)
+    const saved = localStorage.getItem("current_employee");
+    if (saved) {
+      setCurrentEmployee(JSON.parse(saved));
+    } else {
+      setIsEmployeeModalOpen(true);
+    }
+
     // Fetch initial data
     fetch('http://localhost:3001/api/categories')
       .then(res => res.json())
