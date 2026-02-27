@@ -12,6 +12,6 @@ let CustomersController = class CustomersController {
 };
 exports.CustomersController = CustomersController;
 exports.CustomersController = CustomersController = __decorate([
-    (0, common_1.Controller)('customers')
+    (0, common_1.Controller)('api/customers')
 ], CustomersController);
 //# sourceMappingURL=customers.controller.js.map

@@ -12,6 +12,6 @@ let OrdersController = class OrdersController {
 };
 exports.OrdersController = OrdersController;
 exports.OrdersController = OrdersController = __decorate([
-    (0, common_1.Controller)('orders')
+    (0, common_1.Controller)('api/orders')
 ], OrdersController);
 //# sourceMappingURL=orders.controller.js.map

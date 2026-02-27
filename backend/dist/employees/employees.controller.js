@@ -29,7 +29,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], EmployeesController.prototype, "findAll", null);
 exports.EmployeesController = EmployeesController = __decorate([
-    (0, common_1.Controller)('employees'),
+    (0, common_1.Controller)('api/employees'),
     __metadata("design:paramtypes", [employees_service_1.EmployeesService])
 ], EmployeesController);
 //# sourceMappingURL=employees.controller.js.map
