@@ -40,8 +40,6 @@ Formato compacto listo para comandas de cocina.
 Gestión de comandas aparcadas y cobradas.
 ![Listados](docs/screenshots/listados_parked_orders_1772190349784.png)
 
-
-
 ## Estructura del Proyecto
 
 El repositorio está dividido en dos principales directorios:
