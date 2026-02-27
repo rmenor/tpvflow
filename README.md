@@ -14,7 +14,7 @@ TpvFlow es una aplicación moderna y robusta para la gestión de puntos de venta
 *   � **Demo en Vivo**: Puedes probar la aplicación en [tpvflow.vercel.app](https://tpvflow.vercel.app).
     *   **Usuario**: Admin
     *   **PIN**: 1234
-*   �📊 *   📊 **Presentación del Proyecto**: Puedes ver una presentación detallada generada por IA en [NotebookLM - TpvFlow](https://notebooklm.google.com/notebook/56e409a2-e52b-4718-8273-4c1738fb7e4d).
+*   📊 **Presentación del Proyecto**: Puedes ver una presentación detallada generada por IA en [NotebookLM - TpvFlow](https://notebooklm.google.com/notebook/56e409a2-e52b-4718-8273-4c1738fb7e4d).
 
 ## Galería Visual (Capturas Reales)
 
