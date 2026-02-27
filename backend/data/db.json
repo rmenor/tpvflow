@@ -72,8 +72,8 @@
     "employees": [
         {
             "id": "1",
-            "name": "Ramon Menor",
-            "initials": "RM",
+            "name": "Admin",
+            "initials": "AD",
             "pin": "1234",
             "role": "Manager",
             "color": "from-indigo-500 to-purple-500"
