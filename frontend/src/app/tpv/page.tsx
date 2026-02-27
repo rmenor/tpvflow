@@ -88,13 +88,19 @@ function TPVContent() {
         const parkedFlow: any[] = JSON.parse(savedParked);
         const orderToRecover = parkedFlow.find(o => o.id === recoverId);
         if (orderToRecover) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setCart(orderToRecover.items || []);
           if (orderToRecover.client && orderToRecover.client.id) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSelectedClient(orderToRecover.client);
           }
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setTableNumber(orderToRecover.tableNumber || "");
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setDinersCount(orderToRecover.dinersCount || 2);
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setOrderType(orderToRecover.orderType || "LOCAL");
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setCurrentOrderId(orderToRecover.id);
 
           // DO NOT delete it from parked here, so it's not lost if user navigates away.

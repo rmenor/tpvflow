@@ -1,49 +1,50 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Header } from "../../components/layout/Header";
-const MOCK_EMPLOYEES = [
-  { id: "1", name: "Ramon Menor", initials: "RM", pin: "1234", role: "Manager", color: "from-indigo-500 to-purple-500" },
-  { id: "2", name: "Maria Garcia", initials: "MG", pin: "4321", role: "Cajera", color: "from-emerald-500 to-teal-500" },
-  { id: "3", name: "Carlos Perez", initials: "CP", pin: "0000", role: "Camarero", color: "from-amber-500 to-orange-500" }
-];
+import { Order, Employee } from "../../types";
 
 export default function ListadosPage() {
   const router = useRouter();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [parkedOrders, setParkedOrders] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [paidOrders, setPaidOrders] = useState<any[]>([]);
+  const [parkedOrders, setParkedOrders] = useState<Order[]>(() => {
+    if (typeof window === 'undefined') return [];
+    const saved = localStorage.getItem("parked_orders");
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [paidOrders, setPaidOrders] = useState<Order[]>(() => {
+    if (typeof window === 'undefined') return [];
+    const saved = localStorage.getItem("paid_orders");
+    return saved ? JSON.parse(saved) : [];
+  });
   const [activeList, setActiveList] = useState<"APARCADAS" | "COBRADAS">("APARCADAS");
 
   // Estados de Empleado y Acceso
-  const [currentEmployee, setCurrentEmployee] = useState<any>(null);
-  const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(true); // Bloqueado por defecto
-  const [selectedEmployeeToUnlock, setSelectedEmployeeToUnlock] = useState<any>(null);
+  const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem("current_employee");
+      return saved ? JSON.parse(saved) : null;
+    }
+    return null;
+  });
+  const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return !localStorage.getItem("current_employee");
+    }
+    return true;
+  });
+  const [selectedEmployeeToUnlock, setSelectedEmployeeToUnlock] = useState<Employee | null>(null);
   const [enteredPin, setEnteredPin] = useState("");
   const [pinError, setPinError] = useState(false);
+  const [employees, setEmployees] = useState<Employee[]>([]);
 
   useEffect(() => {
-    const savedEmp = localStorage.getItem("current_employee");
-    if (savedEmp) {
-      setCurrentEmployee(JSON.parse(savedEmp));
-      setIsEmployeeModalOpen(false);
-    }
-
-    const savedParked = localStorage.getItem("parked_orders");
-    if (savedParked) {
-
-      setParkedOrders(JSON.parse(savedParked));
-    }
-
-    const savedPaid = localStorage.getItem("paid_orders");
-    if (savedPaid) {
-
-      setPaidOrders(JSON.parse(savedPaid));
-    }
+    fetch('http://localhost:3001/api/employees')
+      .then(res => res.json())
+      .then(data => setEmployees(data))
+      .catch(err => console.error("Error fetching employees:", err));
   }, []);
+
 
   const recoverOrder = (id: string) => {
     router.push(`/tpv?recover=${id}`);
@@ -293,7 +294,7 @@ export default function ListadosPage() {
               </div>
 
               <div className={`flex-1 grid grid-cols-1 ${selectedEmployeeToUnlock ? 'sm:grid-cols-1 lg:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-3'} gap-4 auto-rows-max`}>
-                {MOCK_EMPLOYEES.map(emp => (
+                {employees.map((emp: Employee) => (
                   <button
                     key={emp.id}
                     onClick={() => {

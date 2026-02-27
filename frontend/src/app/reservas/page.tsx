@@ -5,7 +5,7 @@ import { EmployeeModal } from "../../components/modals/EmployeeModal";
 import { Header } from "../../components/layout/Header";
 import { useCustomers } from "../../hooks/useCustomers";
 import { ClientModal, NewClientModal } from "../../components/modals/ClientModal";
-import { Customer, Employee } from "../../types";
+import { Customer, Employee, Order } from "../../types";
 import { format, startOfWeek, addDays, getDaysInMonth, startOfMonth, addMonths, subMonths, isSameDay, startOfDay, addWeeks, subWeeks, addDays as addDaysToDate, subDays } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -28,11 +28,42 @@ export default function ReservasPage() {
     const [viewMode, setViewMode] = useState<ViewMode>("day");
 
     // Employee State
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const [currentEmployee, setCurrentEmployee] = useState<any>(null);
-    const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(true);
+    const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem("current_employee");
+            return saved ? JSON.parse(saved) : null;
+        }
+        return null;
+    });
+    const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return !localStorage.getItem("current_employee");
+        }
+        return true;
+    });
 
-    const [reservations, setReservations] = useState<Reservation[]>([]);
+    const [reservations, setReservations] = useState<Reservation[]>(() => {
+        if (typeof window === 'undefined') return [];
+        const savedParked = localStorage.getItem("parked_orders");
+        if (savedParked) {
+            try {
+                const parked = JSON.parse(savedParked);
+                return parked.filter((o: Order) => (o.status === 'reservado' || o.status === 'aparcado') && o.date).map((o: Order) => ({
+                    id: o.id,
+                    date: o.date!,
+                    time: o.time || "14:00",
+                    name: o.client?.name || "Sin nombre",
+                    partySize: o.dinersCount || 2,
+                    tableNumber: o.tableNumber || "",
+                    phone: o.client?.phone || "",
+                    status: o.status || "aparcado"
+                }));
+            } catch {
+                return [];
+            }
+        }
+        return [];
+    });
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newReservation, setNewReservation] = useState<{
@@ -48,37 +79,32 @@ export default function ReservasPage() {
     });
 
     const {
-        clientsList, selectedClient, setSelectedClient, deselectClient,
+        clientsList, setSelectedClient, deselectClient,
         isClientModalOpen, setIsClientModalOpen,
         isNewClientModalOpen, setIsNewClientModalOpen,
         clientSearchQuery, setClientSearchQuery,
         newClientData, setNewClientData, handleSaveNewClient
     } = useCustomers();
 
-    useEffect(() => {
-        const savedEmp = localStorage.getItem("current_employee");
-        if (savedEmp) {
-            setCurrentEmployee(JSON.parse(savedEmp));
-            setIsEmployeeModalOpen(false);
-        }
-    }, []);
 
-    // Load reservations from parked_orders
+
+    // Sync reservations when isModalOpen changes (e.g. after adding one)
     useEffect(() => {
+        if (typeof window === 'undefined') return;
         const savedParked = localStorage.getItem("parked_orders");
         if (savedParked) {
-            const parked = JSON.parse(savedParked);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const validRes = parked.filter((o: any) => (o.status === 'reservado' || o.status === 'aparcado') && o.date).map((o: any) => ({
+            const parked: Order[] = JSON.parse(savedParked);
+            const validRes = parked.filter((o: Order) => (o.status === 'reservado' || o.status === 'aparcado') && o.date).map((o: Order) => ({
                 id: o.id,
-                date: o.date,
+                date: o.date!,
                 time: o.time || "14:00",
                 name: o.client?.name || "Sin nombre",
                 partySize: o.dinersCount || 2,
                 tableNumber: o.tableNumber || "",
                 phone: o.client?.phone || "",
-                status: o.status
+                status: o.status || "aparcado"
             }));
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setReservations(validRes);
         }
     }, [isModalOpen]);
