@@ -16,19 +16,30 @@ TpvFlow es una aplicación moderna y robusta para la gestión de puntos de venta
     *   **PIN**: 1234
 ## Galería Visual (Capturas Reales)
 
-````carousel
-![Acceso al TPV](docs/screenshots/tpv_main_view_1772190262764.png)
-<!-- slide -->
-![Configurador de Pizzas](docs/screenshots/custom_pizza_modal_1772190279339.png)
-<!-- slide -->
-![Panel de Pedido en Curso](docs/screenshots/order_panel_items_1772190301053.png)
-<!-- slide -->
-![Interfaz de Cobro](docs/screenshots/payment_modal_1772190311786.png)
-<!-- slide -->
-![Ticket de Cocina](docs/screenshots/kitchen_receipt_modal_1772190335069.png)
-<!-- slide -->
-![Listado de Comandas Aparcadas](docs/screenshots/listados_parked_orders_1772190349784.png)
-````
+### 1. Panel Principal del TPV
+La interfaz está optimizada para la agilidad en el punto de venta.
+![Panel Principal](docs/screenshots/tpv_main_view_1772190262764.png)
+
+### 2. Configuración de Pizzas
+Personalización modular de ingredientes con impacto en el precio.
+![Configurador](docs/screenshots/custom_pizza_modal_1772190279339.png)
+
+### 3. Pedido en Curso
+Panel lateral con el resumen detallado de la comanda.
+![Resumen Pedido](docs/screenshots/order_panel_items_1772190301053.png)
+
+### 4. Interfaz de Cobro
+Proceso de pago rápido con teclado numérico integrado.
+![Interfaz Cobro](docs/screenshots/payment_modal_1772190311786.png)
+
+### 5. Ticket de Cocina
+Formato compacto listo para comandas de cocina.
+![Ticket Cocina](docs/screenshots/kitchen_receipt_modal_1772190335069.png)
+
+### 6. Listado de Comandas
+Gestión de comandas aparcadas y cobradas.
+![Listados](docs/screenshots/listados_parked_orders_1772190349784.png)
+
 
 
 ## Estructura del Proyecto
