@@ -1,23 +1,28 @@
-import { useState } from "react";
-
-const MOCK_EMPLOYEES = [
-    { id: "1", name: "Ramon Menor", initials: "RM", pin: "1234", role: "Manager", color: "from-indigo-500 to-purple-500" },
-    { id: "2", name: "Maria Garcia", initials: "MG", pin: "4321", role: "Cajera", color: "from-emerald-500 to-teal-500" },
-    { id: "3", name: "Carlos Perez", initials: "CP", pin: "0000", role: "Camarero", color: "from-amber-500 to-orange-500" }
-];
+import { useState, useEffect } from "react";
+import { Employee } from "../../types";
 
 interface EmployeeModalProps {
     isOpen: boolean;
-    currentEmployee: any;
+    currentEmployee: Employee | null;
     onClose: () => void;
-    onLogin: (employee: any) => void;
+    onLogin: (employee: Employee) => void;
     onLogout: () => void;
 }
 
 export function EmployeeModal({ isOpen, currentEmployee, onClose, onLogin, onLogout }: EmployeeModalProps) {
-    const [selectedEmployeeToUnlock, setSelectedEmployeeToUnlock] = useState<any>(null);
+    const [employees, setEmployees] = useState<Employee[]>([]);
+    const [selectedEmployeeToUnlock, setSelectedEmployeeToUnlock] = useState<Employee | null>(null);
     const [enteredPin, setEnteredPin] = useState("");
     const [pinError, setPinError] = useState(false);
+
+    useEffect(() => {
+        if (isOpen && employees.length === 0) {
+            fetch('http://localhost:3001/api/employees')
+                .then(res => res.json())
+                .then(data => setEmployees(data))
+                .catch(err => console.error("Error fetching employees:", err));
+        }
+    }, [isOpen, employees.length]);
 
     if (!isOpen) return null;
 
@@ -51,7 +56,7 @@ export function EmployeeModal({ isOpen, currentEmployee, onClose, onLogin, onLog
                     </div>
 
                     <div className={`flex-1 grid grid-cols-1 ${selectedEmployeeToUnlock ? 'sm:grid-cols-1 lg:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-3'} gap-4 auto-rows-max`}>
-                        {MOCK_EMPLOYEES.map(emp => (
+                        {employees.map(emp => (
                             <button
                                 key={emp.id}
                                 onClick={() => {

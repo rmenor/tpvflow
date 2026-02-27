@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class CategoriesService {
   findAll() {
-    return [
-      { id: '1', name: 'ENTRANTES', color: 'bg-red-600' },
-      { id: '2', name: 'ENSALADAS', color: 'bg-gray-300' },
-      { id: '3', name: 'PASTAS', color: 'bg-gray-300' },
-      { id: '4', name: 'PIZZAS', color: 'bg-gray-300' },
-      { id: '5', name: 'POSTRES', color: 'bg-red-600' },
-    ];
+    const dbPath = path.resolve(process.cwd(), 'data/db.json');
+    if (!fs.existsSync(dbPath)) return [];
+    const data = fs.readFileSync(dbPath, 'utf8');
+    return JSON.parse(data).categories || [];
   }
 }

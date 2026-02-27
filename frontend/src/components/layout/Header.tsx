@@ -1,15 +1,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { OrderItem } from "../../types";
+import { Employee } from "../../types";
 
 interface HeaderProps {
-    currentEmployee: any;
+    currentEmployee: Employee | null;
     onOpenEmployeeModal: () => void;
-    cart?: OrderItem[];
     onNavigateToListados?: (e: React.MouseEvent) => void;
 }
 
-export function Header({ currentEmployee, onOpenEmployeeModal, cart, onNavigateToListados }: HeaderProps) {
+export function Header({ currentEmployee, onOpenEmployeeModal, onNavigateToListados }: HeaderProps) {
     const pathname = usePathname();
 
     const getLinkClass = (path: string) => {

@@ -39,21 +39,21 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CategoriesService = void 0;
+exports.EmployeesService = void 0;
 const common_1 = require("@nestjs/common");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
-let CategoriesService = class CategoriesService {
+let EmployeesService = class EmployeesService {
     findAll() {
         const dbPath = path.resolve(process.cwd(), 'data/db.json');
         if (!fs.existsSync(dbPath))
             return [];
         const data = fs.readFileSync(dbPath, 'utf8');
-        return JSON.parse(data).categories || [];
+        return JSON.parse(data).employees || [];
     }
 };
-exports.CategoriesService = CategoriesService;
-exports.CategoriesService = CategoriesService = __decorate([
+exports.EmployeesService = EmployeesService;
+exports.EmployeesService = EmployeesService = __decorate([
     (0, common_1.Injectable)()
-], CategoriesService);
-//# sourceMappingURL=categories.service.js.map
+], EmployeesService);
+//# sourceMappingURL=employees.service.js.map

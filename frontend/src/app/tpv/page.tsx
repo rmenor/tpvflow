@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Category, Product, OrderItem } from "../../types";
+import { Category, Product, OrderItem, Employee, Order } from "../../types";
 
 import { useCart } from "../../hooks/useCart";
 import { useCustomers } from "../../hooks/useCustomers";
@@ -24,24 +24,8 @@ function TPVContent() {
   const searchParams = useSearchParams();
   const recoverId = searchParams.get('recover');
 
-  // MOCKS
-  const MOCK_CATEGORIES: Category[] = [
-    { id: "1", name: "ENTRANTES" },
-    { id: "2", name: "ENSALADAS" },
-    { id: "3", name: "PASTAS" },
-    { id: "4", name: "PIZZAS" },
-    { id: "5", name: "POSTRES" },
-    { id: "6", name: "BEBIDAS" }
-  ];
-
-  const MOCK_PRODUCTS: Product[] = [
-    { id: "101", categoryId: "1", name: "Aros de cebolla", price: 4.50 },
-    { id: "102", categoryId: "1", name: "Patatas Bravas", price: 5.00 },
-    { id: "401", categoryId: "4", name: "Pizza Margarita", price: 8.50, ingredients: ["Tomate", "Queso Mozzarella", "Orégano"] },
-    { id: "402", categoryId: "4", name: "Pizza Pepperoni", price: 10.50, ingredients: ["Tomate", "Queso Mozzarella", "Pepperoni"] },
-    { id: "601", categoryId: "6", name: "Coca Cola", price: 2.00 },
-    { id: "602", categoryId: "6", name: "Cerveza", price: 2.50 }
-  ];
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
 
   // STATE
   const [activeCategory, setActiveCategory] = useState<string>("4");
@@ -59,9 +43,7 @@ function TPVContent() {
     newClientData, setNewClientData, handleSaveNewClient
   } = useCustomers();
 
-  // Empleados
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [currentEmployee, setCurrentEmployee] = useState<any>(null);
+  const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
   const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(true);
 
   // Modales adicionales
@@ -71,8 +53,7 @@ function TPVContent() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [isKitchenTicketModalOpen, setIsKitchenTicketModalOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [currentKitchenOrder, setCurrentKitchenOrder] = useState<any>(null);
+  const [currentKitchenOrder, setCurrentKitchenOrder] = useState<Order | null>(null);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -81,6 +62,17 @@ function TPVContent() {
       setCurrentEmployee(JSON.parse(savedEmp));
       setIsEmployeeModalOpen(false);
     }
+
+    // Fetch initial data
+    fetch('http://localhost:3001/api/categories')
+      .then(res => res.json())
+      .then(data => setCategories(data))
+      .catch(err => console.error("Error fetching categories:", err));
+
+    fetch('http://localhost:3001/api/products')
+      .then(res => res.json())
+      .then(data => setProducts(data))
+      .catch(err => console.error("Error fetching products:", err));
   }, []);
 
   useEffect(() => {
@@ -127,7 +119,7 @@ function TPVContent() {
     if (cart.length === 0 && !currentOrderId) return;
 
     // Create new order object keeping the existing ID or a new one
-    const newOrder = {
+    const newOrder: Order = {
       id: currentOrderId || Date.now().toString(),
       items: cart,
       itemsCount: cart.length,
@@ -145,7 +137,7 @@ function TPVContent() {
     const parkedFlow = savedParked ? JSON.parse(savedParked) : [];
 
     // Filter out the old version if it existed
-    const updatedFlow = parkedFlow.filter((o: any) => o.id !== newOrder.id);
+    const updatedFlow = parkedFlow.filter((o: Order) => o.id !== newOrder.id);
 
     localStorage.setItem("parked_orders", JSON.stringify([newOrder, ...updatedFlow]));
 
@@ -212,7 +204,6 @@ function TPVContent() {
       <Header
         currentEmployee={currentEmployee}
         onOpenEmployeeModal={() => setIsEmployeeModalOpen(true)}
-        cart={cart}
         onNavigateToListados={() => router.push('/listados')}
       />
 
@@ -238,12 +229,12 @@ function TPVContent() {
           handleChargeOrder={handleChargeOrder}
         />
 
-        <div className="flex-1 flex flex-col bg-slate-50/50 relative">
+        <div className="flex-1 flex flex-col min-w-0">
           <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-white to-transparent pointer-events-none z-10"></div>
 
           <div className="px-8 z-20 sticky top-0 bg-slate-50/80 backdrop-blur-md pb-2 pt-6 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
             <CategorySelector
-              categories={MOCK_CATEGORIES}
+              categories={categories}
               activeCategory={activeCategory}
               setActiveCategory={setActiveCategory}
             />
@@ -251,7 +242,7 @@ function TPVContent() {
 
           <div className="flex-1 overflow-y-auto px-8 py-6 no-scrollbar pb-32">
             <ProductGrid
-              products={MOCK_PRODUCTS}
+              products={products}
               activeCategory={activeCategory}
               onProductClick={handleProductClick}
             />

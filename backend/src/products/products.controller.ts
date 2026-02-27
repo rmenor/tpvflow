@@ -9,4 +9,9 @@ export class ProductsController {
     findAll() {
         return this.productsService.findAll();
     }
+
+    @Get('extra-ingredients')
+    foundExtraIngredients() {
+        return this.productsService.findExtraIngredients();
+    }
 }

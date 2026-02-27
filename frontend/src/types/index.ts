@@ -37,3 +37,12 @@ export interface Order {
     date?: string;
     time?: string;
 }
+
+export interface Employee {
+    id: string;
+    name: string;
+    pin: string;
+    role: "admin" | "waiter" | "Manager" | "Cajera" | "Camarero";
+    initials?: string;
+    color?: string;
+}

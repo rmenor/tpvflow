@@ -14,12 +14,13 @@ const categories_module_1 = require("./categories/categories.module");
 const products_module_1 = require("./products/products.module");
 const orders_module_1 = require("./orders/orders.module");
 const customers_module_1 = require("./customers/customers.module");
+const employees_module_1 = require("./employees/employees.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [categories_module_1.CategoriesModule, products_module_1.ProductsModule, orders_module_1.OrdersModule, customers_module_1.CustomersModule],
+        imports: [categories_module_1.CategoriesModule, products_module_1.ProductsModule, orders_module_1.OrdersModule, customers_module_1.CustomersModule, employees_module_1.EmployeesModule],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
     })

@@ -1,20 +1,10 @@
 import { useState, useEffect } from "react";
 import { Product } from "../../types";
 
-const EXTRA_INGREDIENTS = [
-    { name: "Extra Queso", price: 1.50 },
-    { name: "Bacon", price: 1.20 },
-    { name: "Champiñones", price: 1.00 },
-    { name: "Cebolla", price: 0.80 },
-    { name: "Atún", price: 1.50 },
-    { name: "Pepperoni", price: 1.20 },
-    { name: "Aceitunas", price: 0.80 },
-    { name: "Huevo", price: 1.00 },
-    { name: "Pollo", price: 1.80 },
-    { name: "Salsa BBQ", price: 0.50 },
-    { name: "Carne Picada", price: 1.20 },
-    { name: "Jamón York", price: 1.00 },
-];
+interface Ingredient {
+    name: string;
+    price: number;
+}
 
 interface CustomPizzaModalProps {
     isOpen: boolean;
@@ -24,15 +14,18 @@ interface CustomPizzaModalProps {
 }
 
 export function CustomPizzaModal({ isOpen, pizza, onClose, onConfirm }: CustomPizzaModalProps) {
+    const [extraIngredients, setExtraIngredients] = useState<Ingredient[]>([]);
     const [removedBaseIngredients, setRemovedBaseIngredients] = useState<string[]>([]);
-    const [addedExtraIngredients, setAddedExtraIngredients] = useState<any[]>([]);
+    const [addedExtraIngredients, setAddedExtraIngredients] = useState<Ingredient[]>([]);
 
     useEffect(() => {
-        if (isOpen) {
-            setRemovedBaseIngredients([]);
-            setAddedExtraIngredients([]);
+        if (isOpen && extraIngredients.length === 0) {
+            fetch('http://localhost:3001/api/products/extra-ingredients')
+                .then(res => res.json())
+                .then(data => setExtraIngredients(data))
+                .catch(err => console.error("Error fetching extra ingredients:", err));
         }
-    }, [isOpen]);
+    }, [isOpen, extraIngredients.length]);
 
     if (!isOpen || !pizza) return null;
 
@@ -44,6 +37,14 @@ export function CustomPizzaModal({ isOpen, pizza, onClose, onConfirm }: CustomPi
         const extraCost = addedExtraIngredients.reduce((acc, ing) => acc + ing.price, 0);
 
         onConfirm(pizza, customIngredientsList, extraCost);
+        setRemovedBaseIngredients([]);
+        setAddedExtraIngredients([]);
+    };
+
+    const handleClose = () => {
+        setRemovedBaseIngredients([]);
+        setAddedExtraIngredients([]);
+        onClose();
     };
 
     return (
@@ -58,7 +59,7 @@ export function CustomPizzaModal({ isOpen, pizza, onClose, onConfirm }: CustomPi
                     </div>
                     <div className="text-right">
                         <div className="text-2xl font-black text-indigo-600">
-                            {(pizza.price + addedExtraIngredients.reduce((acc: number, ing: any) => acc + ing.price, 0)).toFixed(2)} &euro;
+                            {(pizza.price + addedExtraIngredients.reduce((acc, ing) => acc + ing.price, 0)).toFixed(2)} &euro;
                         </div>
                     </div>
                 </div>
@@ -103,7 +104,7 @@ export function CustomPizzaModal({ isOpen, pizza, onClose, onConfirm }: CustomPi
                             Añadir Extras (Tienen Coste)
                         </h3>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            {EXTRA_INGREDIENTS.filter(ing => !(pizza.ingredients || []).includes(ing.name)).map(ing => {
+                            {extraIngredients.filter(ing => !(pizza.ingredients || []).includes(ing.name)).map(ing => {
                                 const isAdded = addedExtraIngredients.some(i => i.name === ing.name);
                                 return (
                                     <button
@@ -131,7 +132,7 @@ export function CustomPizzaModal({ isOpen, pizza, onClose, onConfirm }: CustomPi
 
                 <div className="p-6 bg-white border-t border-slate-100 flex justify-end gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.02)] relative z-10">
                     <button
-                        onClick={onClose}
+                        onClick={handleClose}
                         className="px-6 py-3.5 font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
                     >
                         Cancelar
