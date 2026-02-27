@@ -33,4 +33,7 @@ export interface Order {
     client: Customer;
     tableNumber?: string;
     dinersCount?: number;
+    status?: "aparcado" | "reservado" | "pagado";
+    date?: string;
+    time?: string;
 }

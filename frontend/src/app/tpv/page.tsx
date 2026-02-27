@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Category, Product, OrderItem } from "../../types";
 
 import { useCart } from "../../hooks/useCart";
@@ -21,6 +21,8 @@ import { ClientModal, NewClientModal } from "../../components/modals/ClientModal
 
 export default function TPVPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const recoverId = searchParams.get('recover');
 
   // MOCKS
   const MOCK_CATEGORIES: Category[] = [
@@ -79,6 +81,31 @@ export default function TPVPage() {
       setIsEmployeeModalOpen(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (recoverId) {
+      const savedParked = localStorage.getItem("parked_orders");
+      if (savedParked) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const parkedFlow: any[] = JSON.parse(savedParked);
+        const orderToRecover = parkedFlow.find(o => o.id === recoverId);
+        if (orderToRecover) {
+          setCart(orderToRecover.items || []);
+          if (orderToRecover.client && orderToRecover.client.id) {
+            setSelectedClient(orderToRecover.client);
+          }
+          setTableNumber(orderToRecover.tableNumber || "");
+          setDinersCount(orderToRecover.dinersCount || 2);
+          setOrderType(orderToRecover.orderType || "LOCAL");
+
+          const updatedParked = parkedFlow.filter(o => o.id !== recoverId);
+          localStorage.setItem("parked_orders", JSON.stringify(updatedParked));
+
+          router.replace('/tpv');
+        }
+      }
+    }
+  }, [recoverId, router, setCart, setSelectedClient]);
 
   const handleProductClick = (prod: Product) => {
     if (prod.categoryId === "4" && prod.ingredients) {

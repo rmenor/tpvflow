@@ -34,13 +34,13 @@ export default function ListadosPage() {
 
     const savedParked = localStorage.getItem("parked_orders");
     if (savedParked) {
-       
+
       setParkedOrders(JSON.parse(savedParked));
     }
 
     const savedPaid = localStorage.getItem("paid_orders");
     if (savedPaid) {
-       
+
       setPaidOrders(JSON.parse(savedPaid));
     }
   }, []);
@@ -166,7 +166,9 @@ export default function ListadosPage() {
                           </button>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-[10px] font-black text-amber-600 bg-amber-50 border border-amber-200/60 px-2.5 py-1 rounded-md tracking-wider">APARCADA</span>
+                          <span className={`text-[10px] font-black border px-2.5 py-1 rounded-md tracking-wider ${row.status === 'reservado' ? 'text-indigo-600 bg-indigo-50 border-indigo-200/60' : 'text-amber-600 bg-amber-50 border-amber-200/60'}`}>
+                            {row.status === 'reservado' ? 'RESERVADA' : 'APARCADA'}
+                          </span>
                         </td>
                         <td className="px-6 py-4">
                           <p className="font-bold text-slate-800">{row.client?.name || "Sin nombre"}</p>

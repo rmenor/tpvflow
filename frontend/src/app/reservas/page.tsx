@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { EmployeeModal } from "../../components/modals/EmployeeModal";
 import { Header } from "../../components/layout/Header";
+import { useCustomers } from "../../hooks/useCustomers";
+import { ClientModal, NewClientModal } from "../../components/modals/ClientModal";
+import { Customer } from "../../types";
 import { format, startOfWeek, addDays, getDaysInMonth, startOfMonth, addMonths, subMonths, isSameDay, startOfDay, addWeeks, subWeeks, addDays as addDaysToDate, subDays } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -53,18 +56,22 @@ export default function ReservasPage() {
     const [newReservation, setNewReservation] = useState<{
         date: string; // The selected date for the new reservation
         time: string;
-        name: string;
         partySize: number;
         tableNumber: string;
-        phone: string;
     }>({
         date: format(new Date(), 'yyyy-MM-dd'),
         time: "14:00",
-        name: "",
         partySize: 2,
         tableNumber: "",
-        phone: "",
     });
+
+    const {
+        clientsList, selectedClient, setSelectedClient, deselectClient,
+        isClientModalOpen, setIsClientModalOpen,
+        isNewClientModalOpen, setIsNewClientModalOpen,
+        clientSearchQuery, setClientSearchQuery,
+        newClientData, setNewClientData, handleSaveNewClient
+    } = useCustomers();
 
     useEffect(() => {
         const savedEmp = localStorage.getItem("current_employee");
@@ -80,29 +87,66 @@ export default function ReservasPage() {
         setIsModalOpen(true);
     };
 
-    const handleSaveReservation = () => {
-        if (!newReservation.name || !newReservation.time || !newReservation.tableNumber || !newReservation.date) return;
+    const handleSaveReservation = (client: Customer) => {
+        if (!newReservation.time || !newReservation.tableNumber || !newReservation.date) return;
+
+        const newResId = Date.now().toString();
 
         const newRes: Reservation = {
-            id: Date.now().toString(),
+            id: newResId,
             date: newReservation.date,
             time: newReservation.time,
-            name: newReservation.name,
+            name: client.name,
             partySize: newReservation.partySize,
             tableNumber: newReservation.tableNumber,
-            phone: newReservation.phone,
+            phone: client.phone || "",
         };
 
         setReservations((prev) => [...prev, newRes]);
         setIsModalOpen(false);
+
+        // EXTRA LOGIC FOR TICKETING: Park this reservation as a ticket
+        const newOrder = {
+            id: newResId,
+            items: [],
+            itemsCount: 0,
+            total: 0,
+            orderType: "LOCAL",
+            client: client,
+            tableNumber: newReservation.tableNumber,
+            dinersCount: newReservation.partySize,
+            status: "reservado",
+            date: newReservation.date,
+            time: newReservation.time
+        };
+        const savedParked = localStorage.getItem("parked_orders");
+        const parkedFlow = savedParked ? JSON.parse(savedParked) : [];
+        localStorage.setItem("parked_orders", JSON.stringify([newOrder, ...parkedFlow]));
+
         setNewReservation({
             date: format(selectedDate, 'yyyy-MM-dd'),
             time: "14:00",
-            name: "",
             partySize: 2,
             tableNumber: "",
-            phone: "",
         });
+        deselectClient();
+    };
+
+    const handleSelectClient = (client: Customer) => {
+        setSelectedClient(client);
+        setIsClientModalOpen(false);
+        handleSaveReservation(client);
+    };
+
+    const onSaveNewClientAndReserve = () => {
+        handleSaveNewClient();
+        const createdClient = { id: Date.now().toString(), name: newClientData.name, address: newClientData.address, phone: newClientData.phone };
+        handleSaveReservation(createdClient);
+    }
+
+    const goToClientSelection = () => {
+        setIsModalOpen(false);
+        setIsClientModalOpen(true);
     };
 
     const handleLogout = () => {
@@ -445,17 +489,6 @@ export default function ReservasPage() {
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2">Nombre del Cliente</label>
-                                <input
-                                    type="text"
-                                    placeholder="Ej. Familia Rodríguez"
-                                    className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-2xl px-5 py-3.5 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all shadow-inner"
-                                    value={newReservation.name}
-                                    onChange={(e) => setNewReservation({ ...newReservation, name: e.target.value })}
-                                />
-                            </div>
-
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-2">Comensales</label>
@@ -477,16 +510,6 @@ export default function ReservasPage() {
                                         </button>
                                     </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">Teléfono de Contacto</label>
-                                    <input
-                                        type="tel"
-                                        placeholder="Ej. 600 123 456"
-                                        className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-2xl px-5 py-3.5 h-[60px] font-bold focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all shadow-inner"
-                                        value={newReservation.phone}
-                                        onChange={(e) => setNewReservation({ ...newReservation, phone: e.target.value })}
-                                    />
-                                </div>
                             </div>
                         </div>
 
@@ -498,20 +521,42 @@ export default function ReservasPage() {
                                 Cancelar
                             </button>
                             <button
-                                onClick={handleSaveReservation}
-                                disabled={!newReservation.name || !newReservation.time || !newReservation.tableNumber || !newReservation.date}
-                                className={`flex-1 py-4 font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 ${(!newReservation.name || !newReservation.time || !newReservation.tableNumber || !newReservation.date)
+                                onClick={goToClientSelection}
+                                disabled={!newReservation.time || !newReservation.tableNumber || !newReservation.date}
+                                className={`flex-1 py-4 font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 ${(!newReservation.time || !newReservation.tableNumber || !newReservation.date)
                                     ? 'bg-slate-300 text-slate-50 shadow-none cursor-not-allowed'
                                     : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-indigo-600/30'
                                     }`}
                             >
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                                Confirmar Reserva
+                                Siguiente: Elegir Cliente
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
                             </button>
                         </div>
                     </div>
                 </div>
             )}
+
+            {/* Modal Cliente y Nuevo Cliente (integrado de TPV) */}
+            <ClientModal
+                isOpen={isClientModalOpen}
+                onClose={() => setIsClientModalOpen(false)}
+                clientsList={clientsList}
+                clientSearchQuery={clientSearchQuery}
+                setClientSearchQuery={setClientSearchQuery}
+                onSelectClient={handleSelectClient}
+                onOpenNewClient={() => {
+                    setIsClientModalOpen(false);
+                    setIsNewClientModalOpen(true);
+                }}
+            />
+
+            <NewClientModal
+                isOpen={isNewClientModalOpen}
+                onClose={() => setIsNewClientModalOpen(false)}
+                newClientData={newClientData}
+                setNewClientData={setNewClientData}
+                onSave={onSaveNewClientAndReserve}
+            />
 
             {/* Employee Modal */}
             <EmployeeModal
