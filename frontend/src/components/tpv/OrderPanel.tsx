@@ -13,9 +13,9 @@ interface OrderPanelProps {
     setIsClientModalOpen: (open: boolean) => void;
     setIsNewClientModalOpen: (open: boolean) => void;
     tableNumber: string;
-    setTableNumber: (num: string) => void;
+    setTableNumber: React.Dispatch<React.SetStateAction<string>>;
     dinersCount: number;
-    setDinersCount: (count: number) => void;
+    setDinersCount: React.Dispatch<React.SetStateAction<number>>;
     total: number;
     onParkOrder: () => void;
     onConfirmPayment: () => void;
