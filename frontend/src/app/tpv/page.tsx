@@ -73,6 +73,7 @@ export default function TPVPage() {
   const [isKitchenTicketModalOpen, setIsKitchenTicketModalOpen] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [currentKitchenOrder, setCurrentKitchenOrder] = useState<any>(null);
+  const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     const savedEmp = localStorage.getItem("current_employee");
@@ -97,9 +98,9 @@ export default function TPVPage() {
           setTableNumber(orderToRecover.tableNumber || "");
           setDinersCount(orderToRecover.dinersCount || 2);
           setOrderType(orderToRecover.orderType || "LOCAL");
+          setCurrentOrderId(orderToRecover.id);
 
-          const updatedParked = parkedFlow.filter(o => o.id !== recoverId);
-          localStorage.setItem("parked_orders", JSON.stringify(updatedParked));
+          // DO NOT delete it from parked here, so it's not lost if user navigates away.
 
           router.replace('/tpv');
         }
@@ -123,9 +124,11 @@ export default function TPVPage() {
   };
 
   const handleParkOrder = () => {
-    if (cart.length === 0) return;
+    if (cart.length === 0 && !currentOrderId) return;
+
+    // Create new order object keeping the existing ID or a new one
     const newOrder = {
-      id: Date.now().toString(),
+      id: currentOrderId || Date.now().toString(),
       items: cart,
       itemsCount: cart.length,
       total,
@@ -133,17 +136,25 @@ export default function TPVPage() {
       client: selectedClient,
       tableNumber,
       dinersCount,
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
+      // Remove 'reservado' status since it's actively parked now
+      status: "aparcado"
     };
+
     const savedParked = localStorage.getItem("parked_orders");
     const parkedFlow = savedParked ? JSON.parse(savedParked) : [];
-    localStorage.setItem("parked_orders", JSON.stringify([newOrder, ...parkedFlow]));
+
+    // Filter out the old version if it existed
+    const updatedFlow = parkedFlow.filter((o: any) => o.id !== newOrder.id);
+
+    localStorage.setItem("parked_orders", JSON.stringify([newOrder, ...updatedFlow]));
 
     setCurrentKitchenOrder(newOrder);
     setIsKitchenTicketModalOpen(true);
     clearCart();
     setTableNumber("");
     setDinersCount(2);
+    setCurrentOrderId(null);
     deselectClient();
   };
 
@@ -167,6 +178,17 @@ export default function TPVPage() {
     const savedPaid = localStorage.getItem("paid_orders");
     const paidFlow = savedPaid ? JSON.parse(savedPaid) : [];
     localStorage.setItem("paid_orders", JSON.stringify([newPaidOrder, ...paidFlow]));
+
+    if (currentOrderId) {
+      const savedParked = localStorage.getItem("parked_orders");
+      if (savedParked) {
+        const parkedFlow = JSON.parse(savedParked);
+        const updatedParked = parkedFlow.filter((o: any) => o.id !== currentOrderId);
+        localStorage.setItem("parked_orders", JSON.stringify(updatedParked));
+      }
+    }
+
+    setCurrentOrderId(null);
     setIsPaymentModalOpen(false);
     setIsTicketModalOpen(true);
   };
