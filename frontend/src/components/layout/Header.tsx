@@ -1,16 +1,25 @@
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { OrderItem } from "../../types";
 
 interface HeaderProps {
     currentEmployee: any;
     onOpenEmployeeModal: () => void;
-    cart: OrderItem[];
-    onNavigateToListados: (e: React.MouseEvent) => void;
+    cart?: OrderItem[];
+    onNavigateToListados?: (e: React.MouseEvent) => void;
 }
 
 export function Header({ currentEmployee, onOpenEmployeeModal, cart, onNavigateToListados }: HeaderProps) {
+    const pathname = usePathname();
+
+    const getLinkClass = (path: string) => {
+        return pathname === path
+            ? "px-5 py-2 text-sm font-bold rounded-xl transition-all duration-300 bg-white text-indigo-900 shadow-sm cursor-default"
+            : "px-5 py-2 text-sm font-bold rounded-xl transition-all duration-300 text-slate-500 hover:text-slate-800 hover:bg-slate-200/50";
+    };
+
     return (
-        <header className="h-20 flex items-center justify-between px-8 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-10">
+        <header className="h-20 flex items-center justify-between px-8 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-10 shrink-0">
             <div className="flex items-center gap-6">
                 <div className="font-black flex flex-col leading-none">
                     <span className="text-indigo-600 text-xl tracking-tighter">TpvFlow</span>
@@ -20,13 +29,19 @@ export function Header({ currentEmployee, onOpenEmployeeModal, cart, onNavigateT
 
             <div className="flex items-center gap-6">
                 <nav className="hidden lg:flex items-center gap-1 bg-slate-100/80 p-1.5 rounded-2xl">
-                    <Link href="/tpv" className="px-5 py-2 text-sm font-bold rounded-xl transition-all duration-300 bg-white text-indigo-900 shadow-sm">
+                    <Link href="/tpv" className={getLinkClass("/tpv")}>
                         TPV
                     </Link>
-                    <button onClick={onNavigateToListados} className="px-5 py-2 text-sm font-bold rounded-xl transition-all duration-300 text-slate-500 hover:text-slate-800 hover:bg-slate-200/50">
-                        Listados
-                    </button>
-                    <Link href="/reservas" className="px-5 py-2 text-sm font-bold rounded-xl transition-all duration-300 text-slate-500 hover:text-slate-800 hover:bg-slate-200/50">
+                    {onNavigateToListados ? (
+                        <button onClick={onNavigateToListados} className={getLinkClass("/listados")}>
+                            Listados
+                        </button>
+                    ) : (
+                        <Link href="/listados" className={getLinkClass("/listados")}>
+                            Listados
+                        </Link>
+                    )}
+                    <Link href="/reservas" className={getLinkClass("/reservas")}>
                         Reservas
                     </Link>
                 </nav>

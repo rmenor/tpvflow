@@ -117,7 +117,7 @@ export default function TPVPage() {
     clearCart();
     setTableNumber("");
     setDinersCount(2);
-    setSelectedClient({ id: "0", name: "Sin nombre", address: "C/ Sin nombre" });
+    deselectClient();
   };
 
   const handleChargeOrder = () => {
