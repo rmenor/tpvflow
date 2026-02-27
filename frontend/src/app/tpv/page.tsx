@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Category, Product, OrderItem } from "../../types";
 
@@ -19,7 +19,7 @@ import { KitchenTicketModal } from "../../components/modals/KitchenTicketModal";
 import { EmployeeModal } from "../../components/modals/EmployeeModal";
 import { ClientModal, NewClientModal } from "../../components/modals/ClientModal";
 
-export default function TPVPage() {
+function TPVContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const recoverId = searchParams.get('recover');
@@ -336,5 +336,13 @@ export default function TPVPage() {
       />
 
     </div>
+  );
+}
+
+export default function TPVPage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center bg-slate-50 text-indigo-600 font-bold">Cargando TPV...</div>}>
+      <TPVContent />
+    </Suspense>
   );
 }
