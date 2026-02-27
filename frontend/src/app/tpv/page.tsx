@@ -117,7 +117,7 @@ export default function TPVPage() {
     clearCart();
     setTableNumber("");
     setDinersCount(2);
-    setSelectedClient(null);
+    setSelectedClient({ id: "0", name: "Sin nombre", address: "C/ San Onofre 31" });
   };
 
   const handleChargeOrder = () => {
