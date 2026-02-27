@@ -17,6 +17,7 @@ interface Reservation {
     partySize: number;
     tableNumber: string;
     phone: string;
+    status?: string;
 }
 
 type ViewMode = "month" | "week" | "day";
@@ -31,26 +32,7 @@ export default function ReservasPage() {
     const [currentEmployee, setCurrentEmployee] = useState<any>(null);
     const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(true);
 
-    const [reservations, setReservations] = useState<Reservation[]>([
-        {
-            id: "1",
-            date: format(new Date(), 'yyyy-MM-dd'),
-            time: "14:00",
-            name: "Juan Pérez",
-            partySize: 4,
-            tableNumber: "1",
-            phone: "600 123 456",
-        },
-        {
-            id: "2",
-            date: format(new Date(), 'yyyy-MM-dd'),
-            time: "21:30",
-            name: "Maria García",
-            partySize: 2,
-            tableNumber: "5",
-            phone: "611 987 654",
-        },
-    ]);
+    const [reservations, setReservations] = useState<Reservation[]>([]);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newReservation, setNewReservation] = useState<{
@@ -81,6 +63,26 @@ export default function ReservasPage() {
         }
     }, []);
 
+    // Load reservations from parked_orders
+    useEffect(() => {
+        const savedParked = localStorage.getItem("parked_orders");
+        if (savedParked) {
+            const parked = JSON.parse(savedParked);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const validRes = parked.filter((o: any) => (o.status === 'reservado' || o.status === 'aparcado') && o.date).map((o: any) => ({
+                id: o.id,
+                date: o.date,
+                time: o.time || "14:00",
+                name: o.client?.name || "Sin nombre",
+                partySize: o.dinersCount || 2,
+                tableNumber: o.tableNumber || "",
+                phone: o.client?.phone || "",
+                status: o.status
+            }));
+            setReservations(validRes);
+        }
+    }, [isModalOpen]);
+
     // When opening the modal, default the reservation date to the currently inspected date
     const handleOpenModal = () => {
         setNewReservation(prev => ({ ...prev, date: format(selectedDate, 'yyyy-MM-dd') }));
@@ -100,10 +102,8 @@ export default function ReservasPage() {
             partySize: newReservation.partySize,
             tableNumber: newReservation.tableNumber,
             phone: client.phone || "",
+            status: "reservado"
         };
-
-        setReservations((prev) => [...prev, newRes]);
-        setIsModalOpen(false);
 
         // EXTRA LOGIC FOR TICKETING: Park this reservation as a ticket
         const newOrder = {
@@ -122,6 +122,10 @@ export default function ReservasPage() {
         const savedParked = localStorage.getItem("parked_orders");
         const parkedFlow = savedParked ? JSON.parse(savedParked) : [];
         localStorage.setItem("parked_orders", JSON.stringify([newOrder, ...parkedFlow]));
+
+        // Immediately update state so it shows up wihout waiting for effect
+        setReservations((prev) => [...prev, newRes]);
+        setIsModalOpen(false);
 
         setNewReservation({
             date: format(selectedDate, 'yyyy-MM-dd'),
@@ -321,9 +325,16 @@ export default function ReservasPage() {
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-50/80 to-indigo-100/30 rounded-bl-[100px] -z-10 transition-transform group-hover:scale-110"></div>
 
                                 <div className="flex justify-between items-start mb-5">
-                                    <div className="bg-indigo-600 text-white font-black text-2xl tracking-tighter px-4 py-2 rounded-[18px] shadow-sm flex items-center gap-2">
-                                        <svg className="w-5 h-5 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                        {res.time}
+                                    <div className="flex items-center gap-3">
+                                        <div className="bg-indigo-600 text-white font-black text-2xl tracking-tighter px-4 py-2 rounded-[18px] shadow-sm flex items-center gap-2">
+                                            <svg className="w-5 h-5 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                            {res.time}
+                                        </div>
+                                        {res.status === 'aparcado' && (
+                                            <span className="bg-emerald-100 text-emerald-700 font-bold text-xs px-3 py-1 rounded-full uppercase tracking-wider border border-emerald-200">
+                                                VINO
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="bg-slate-100 text-slate-600 font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-2 border border-slate-200/50">
                                         <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
