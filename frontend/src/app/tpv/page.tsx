@@ -200,7 +200,7 @@ function TPVContent() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 text-slate-800 font-sans overflow-hidden selection:bg-indigo-100 flex-col">
+    <div className="flex h-screen bg-slate-50 text-slate-800 font-sans overflow-hidden selection:bg-indigo-100 flex-row">
       <style jsx global>{`
         .no-scrollbar::-webkit-scrollbar {
           display: none;
@@ -210,35 +210,36 @@ function TPVContent() {
           scrollbar-width: none;
         }
       `}</style>
-      <Header
-        currentEmployee={currentEmployee}
-        onOpenEmployeeModal={() => setIsEmployeeModalOpen(true)}
-        onNavigateToListados={() => router.push('/listados')}
+
+      <OrderPanel
+        orderType={orderType}
+        setOrderType={setOrderType}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        cart={cart}
+        addToCart={addToCart}
+        removeFromCart={removeFromCart}
+        selectedClient={selectedClient}
+        deselectClient={deselectClient}
+        setIsClientModalOpen={setIsClientModalOpen}
+        setIsNewClientModalOpen={setIsNewClientModalOpen}
+        tableNumber={tableNumber}
+        setTableNumber={setTableNumber}
+        dinersCount={dinersCount}
+        setDinersCount={setDinersCount}
+        total={total}
+        onParkOrder={handleParkOrder}
+        onConfirmPayment={() => setIsPaymentModalOpen(true)}
       />
 
-      <main className="flex-1 overflow-hidden flex relative z-0">
-        <OrderPanel
-          orderType={orderType}
-          setOrderType={setOrderType}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          cart={cart}
-          addToCart={addToCart}
-          removeFromCart={removeFromCart}
-          selectedClient={selectedClient}
-          deselectClient={deselectClient}
-          setIsClientModalOpen={setIsClientModalOpen}
-          setIsNewClientModalOpen={setIsNewClientModalOpen}
-          tableNumber={tableNumber}
-          setTableNumber={setTableNumber}
-          dinersCount={dinersCount}
-          setDinersCount={setDinersCount}
-          total={total}
-          onParkOrder={handleParkOrder}
-          onConfirmPayment={() => setIsPaymentModalOpen(true)}
+      <div className="flex-1 flex flex-col min-w-0 relative">
+        <Header
+          currentEmployee={currentEmployee}
+          onOpenEmployeeModal={() => setIsEmployeeModalOpen(true)}
+          onNavigateToListados={() => router.push('/listados')}
         />
 
-        <div className="flex-1 flex flex-col min-w-0">
+        <main className="flex-1 overflow-hidden flex flex-col relative z-0">
           <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-white to-transparent pointer-events-none z-10"></div>
 
           <div className="px-8 z-20 sticky top-0 bg-slate-50/80 backdrop-blur-md pb-2 pt-6 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
@@ -256,8 +257,8 @@ function TPVContent() {
               onProductClick={handleProductClick}
             />
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
 
       {/* Modales */}
       <CustomPizzaModal
