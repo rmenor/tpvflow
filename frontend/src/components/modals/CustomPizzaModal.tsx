@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Product } from "../../types";
+import { API_URL } from "../../config/api";
 
 interface Ingredient {
     name: string;
@@ -20,7 +21,7 @@ export function CustomPizzaModal({ isOpen, pizza, onClose, onConfirm }: CustomPi
 
     useEffect(() => {
         if (isOpen && extraIngredients.length === 0) {
-            fetch('http://localhost:3001/api/products/extra-ingredients')
+            fetch(`${API_URL}/api/products/extra-ingredients`)
                 .then(res => res.json())
                 .then(data => setExtraIngredients(data))
                 .catch(err => console.error("Error fetching extra ingredients:", err));

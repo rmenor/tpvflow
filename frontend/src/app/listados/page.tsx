@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Header } from "../../components/layout/Header";
 import { Order, Employee } from "../../types";
+import { API_URL } from "../../config/api";
 
 export default function ListadosPage() {
   const router = useRouter();
@@ -39,7 +40,7 @@ export default function ListadosPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/employees')
+    fetch(`${API_URL}/api/employees`)
       .then(res => res.json())
       .then(data => setEmployees(data))
       .catch(err => console.error("Error fetching employees:", err));

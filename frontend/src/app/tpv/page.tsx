@@ -18,6 +18,7 @@ import { TicketModal } from "../../components/modals/TicketModal";
 import { KitchenTicketModal } from "../../components/modals/KitchenTicketModal";
 import { EmployeeModal } from "../../components/modals/EmployeeModal";
 import { ClientModal, NewClientModal } from "../../components/modals/ClientModal";
+import { API_URL } from "../../config/api";
 
 function TPVContent() {
   const router = useRouter();
@@ -66,12 +67,12 @@ function TPVContent() {
     }
 
     // Fetch initial data
-    fetch('http://localhost:3001/api/categories')
+    fetch(`${API_URL}/api/categories`)
       .then(res => res.json())
       .then(data => setCategories(data))
       .catch(err => console.error("Error fetching categories:", err));
 
-    fetch('http://localhost:3001/api/products')
+    fetch(`${API_URL}/api/products`)
       .then(res => res.json())
       .then(data => setProducts(data))
       .catch(err => console.error("Error fetching products:", err));

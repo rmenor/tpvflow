@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Employee } from "../../types";
+import { API_URL } from "../../config/api";
 
 interface EmployeeModalProps {
     isOpen: boolean;
@@ -17,7 +18,7 @@ export function EmployeeModal({ isOpen, currentEmployee, onClose, onLogin, onLog
 
     useEffect(() => {
         if (isOpen && employees.length === 0) {
-            fetch('http://localhost:3001/api/employees')
+            fetch(`${API_URL}/api/employees`)
                 .then(res => res.json())
                 .then(data => setEmployees(data))
                 .catch(err => console.error("Error fetching employees:", err));
