@@ -34,6 +34,8 @@ export interface Order {
     tableNumber?: string;
     dinersCount?: number;
     status?: "aparcado" | "reservado" | "pagado";
+    paymentMethod?: "EFECTIVO" | "TARJETA";
+    tenderedAmount?: string | null;
     date?: string;
     time?: string;
 }

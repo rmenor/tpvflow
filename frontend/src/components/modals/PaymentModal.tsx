@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Customer, OrderItem } from "../../types";
 
 interface PaymentModalProps {
     isOpen: boolean;

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Product } from "../../types";
 
 interface ProductGridProps {
@@ -18,10 +19,11 @@ export function ProductGrid({ products, activeCategory, onProductClick }: Produc
                         className="group bg-white rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-lg hover:shadow-indigo-100/60 hover:border-indigo-100 transition-all duration-300 flex flex-col text-left overflow-hidden transform hover:-translate-y-1 relative"
                     >
                         <div className="h-28 w-full bg-slate-100 relative overflow-hidden">
-                            <img
+                            <Image
                                 src={`https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=300&h=200`}
                                 alt=""
-                                className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
+                                fill
+                                className="object-cover group-hover:scale-110 transition-transform duration-500"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                             <div className="absolute bottom-2 left-3 right-3">

@@ -1,4 +1,4 @@
-import { Customer, OrderItem } from "../../types";
+import { OrderItem } from "../../types";
 
 interface TicketModalProps {
     isOpen: boolean;

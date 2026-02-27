@@ -6,26 +6,26 @@ interface OrderPanelProps {
     activeTab: string;
     setActiveTab: React.Dispatch<React.SetStateAction<string>>;
     cart: OrderItem[];
-    addToCart: (item: any) => void;
-    removeFromCart: (item: any) => void;
+    addToCart: (item: OrderItem) => void;
+    removeFromCart: (item: OrderItem) => void;
     selectedClient: Customer | null;
-    setSelectedClient: React.Dispatch<React.SetStateAction<any>>;
-    setIsClientModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    setIsNewClientModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    deselectClient: () => void;
+    setIsClientModalOpen: (open: boolean) => void;
+    setIsNewClientModalOpen: (open: boolean) => void;
     tableNumber: string;
-    setTableNumber: React.Dispatch<React.SetStateAction<string>>;
+    setTableNumber: (num: string) => void;
     dinersCount: number;
-    setDinersCount: React.Dispatch<React.SetStateAction<number>>;
+    setDinersCount: (count: number) => void;
     total: number;
-    handleParkOrder: () => void;
-    handleChargeOrder: () => void;
+    onParkOrder: () => void;
+    onConfirmPayment: () => void;
 }
 
 export function OrderPanel({
     orderType, setOrderType, activeTab, setActiveTab, cart, addToCart, removeFromCart,
-    selectedClient, setSelectedClient, setIsClientModalOpen, setIsNewClientModalOpen,
+    selectedClient, deselectClient, setIsClientModalOpen, setIsNewClientModalOpen,
     tableNumber, setTableNumber, dinersCount, setDinersCount, total,
-    handleParkOrder, handleChargeOrder
+    onParkOrder, onConfirmPayment
 }: OrderPanelProps) {
 
     return (
@@ -141,7 +141,7 @@ export function OrderPanel({
                                 {/* Botón para Desmarcar Cliente */}
                                 {selectedClient && selectedClient.name !== "Sin nombre" && (
                                     <button
-                                        onClick={() => setSelectedClient({ id: "0", name: "Sin nombre", address: "C/ Sin nombre" })}
+                                        onClick={deselectClient}
                                         className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white hover:text-indigo-600 transition-colors"
                                         title="Desmarcar cliente"
                                     >
@@ -273,7 +273,7 @@ export function OrderPanel({
                 </div>
                 <div className="flex gap-3">
                     <button
-                        onClick={handleParkOrder}
+                        onClick={onParkOrder}
                         disabled={cart.length === 0}
                         className={`w-1/3 relative overflow-hidden group rounded-[20px] py-4.5 font-bold text-base shadow-lg flex flex-col items-center justify-center gap-1 transition-all active:scale-[0.98] ${cart.length === 0
                             ? "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none"
@@ -286,7 +286,7 @@ export function OrderPanel({
                     </button>
 
                     <button
-                        onClick={handleChargeOrder}
+                        onClick={onConfirmPayment}
                         disabled={cart.length === 0}
                         className={`w-2/3 relative overflow-hidden group rounded-[20px] py-4.5 font-bold text-lg shadow-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] ${cart.length === 0
                             ? "bg-slate-300 text-slate-500 cursor-not-allowed shadow-none"

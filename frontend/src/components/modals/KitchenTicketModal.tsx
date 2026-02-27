@@ -1,7 +1,9 @@
+import { Order, OrderItem } from "../../types";
+
 interface KitchenTicketModalProps {
     isOpen: boolean;
     onClose: () => void;
-    order: any;
+    order: Order | null;
     onPrint: () => void;
 }
 
@@ -38,7 +40,7 @@ export function KitchenTicketModal({ isOpen, onClose, order, onPrint }: KitchenT
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200">
-                            {order.items.map((item: any, idx: number) => (
+                            {order.items.map((item: OrderItem, idx: number) => (
                                 <tr key={idx} className="align-top">
                                     <td className="py-4 text-center text-2xl font-black">{item.quantity}</td>
                                     <td className="py-4 pr-2">

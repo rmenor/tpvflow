@@ -5,7 +5,7 @@ import { EmployeeModal } from "../../components/modals/EmployeeModal";
 import { Header } from "../../components/layout/Header";
 import { useCustomers } from "../../hooks/useCustomers";
 import { ClientModal, NewClientModal } from "../../components/modals/ClientModal";
-import { Customer } from "../../types";
+import { Customer, Employee } from "../../types";
 import { format, startOfWeek, addDays, getDaysInMonth, startOfMonth, addMonths, subMonths, isSameDay, startOfDay, addWeeks, subWeeks, addDays as addDaysToDate, subDays } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -316,7 +316,7 @@ export default function ReservasPage() {
                             </svg>
                         </div>
                         <h3 className="text-xl font-bold text-slate-800 mb-2">Día libre de reservas</h3>
-                        <p className="text-slate-500 font-medium max-w-sm">No se han encontrado reservas para este día. Haz clic en "Nueva Reserva" para añadir una.</p>
+                        <p className="text-slate-500 font-medium max-w-sm">No se han encontrado reservas para este día. Haz clic en &quot;Nueva Reserva&quot; para añadir una.</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-20">
@@ -574,7 +574,7 @@ export default function ReservasPage() {
                 isOpen={isEmployeeModalOpen}
                 currentEmployee={currentEmployee}
                 onClose={() => setIsEmployeeModalOpen(false)}
-                onLogin={(emp: any) => {
+                onLogin={(emp: Employee) => {
                     setCurrentEmployee(emp);
                     localStorage.setItem("current_employee", JSON.stringify(emp));
                     setIsEmployeeModalOpen(false);

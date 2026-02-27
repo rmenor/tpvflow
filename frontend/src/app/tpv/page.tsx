@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Category, Product, OrderItem, Employee, Order } from "../../types";
+import { Category, Product, Employee, Order } from "../../types";
 
 import { useCart } from "../../hooks/useCart";
 import { useCustomers } from "../../hooks/useCustomers";
@@ -43,8 +43,19 @@ function TPVContent() {
     newClientData, setNewClientData, handleSaveNewClient
   } = useCustomers();
 
-  const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
-  const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(true);
+  const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem("current_employee");
+      return saved ? JSON.parse(saved) : null;
+    }
+    return null;
+  });
+  const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return !localStorage.getItem("current_employee");
+    }
+    return true;
+  });
 
   // Modales adicionales
   const [isIngredientsModalOpen, setIsIngredientsModalOpen] = useState(false);
@@ -57,12 +68,6 @@ function TPVContent() {
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
 
   useEffect(() => {
-    const savedEmp = localStorage.getItem("current_employee");
-    if (savedEmp) {
-      setCurrentEmployee(JSON.parse(savedEmp));
-      setIsEmployeeModalOpen(false);
-    }
-
     // Fetch initial data
     fetch('http://localhost:3001/api/categories')
       .then(res => res.json())
@@ -150,9 +155,6 @@ function TPVContent() {
     deselectClient();
   };
 
-  const handleChargeOrder = () => {
-    setIsPaymentModalOpen(true);
-  };
 
   const handleConfirmPayment = (method: "EFECTIVO" | "TARJETA", tendered: string) => {
     const newPaidOrder = {
@@ -163,6 +165,7 @@ function TPVContent() {
       orderType,
       client: selectedClient,
       paymentMethod: method,
+      tenderedAmount: method === "EFECTIVO" ? tendered : null,
       tableNumber,
       dinersCount,
       date: new Date().toISOString()
@@ -174,8 +177,8 @@ function TPVContent() {
     if (currentOrderId) {
       const savedParked = localStorage.getItem("parked_orders");
       if (savedParked) {
-        const parkedFlow = JSON.parse(savedParked);
-        const updatedParked = parkedFlow.filter((o: any) => o.id !== currentOrderId);
+        const parkedFlow: Order[] = JSON.parse(savedParked);
+        const updatedParked = parkedFlow.filter(o => o.id !== currentOrderId);
         localStorage.setItem("parked_orders", JSON.stringify(updatedParked));
       }
     }
@@ -217,7 +220,7 @@ function TPVContent() {
           addToCart={addToCart}
           removeFromCart={removeFromCart}
           selectedClient={selectedClient}
-          setSelectedClient={setSelectedClient}
+          deselectClient={deselectClient}
           setIsClientModalOpen={setIsClientModalOpen}
           setIsNewClientModalOpen={setIsNewClientModalOpen}
           tableNumber={tableNumber}
@@ -225,8 +228,8 @@ function TPVContent() {
           dinersCount={dinersCount}
           setDinersCount={setDinersCount}
           total={total}
-          handleParkOrder={handleParkOrder}
-          handleChargeOrder={handleChargeOrder}
+          onParkOrder={handleParkOrder}
+          onConfirmPayment={() => setIsPaymentModalOpen(true)}
         />
 
         <div className="flex-1 flex flex-col min-w-0">
