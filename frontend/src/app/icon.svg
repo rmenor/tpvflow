@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#4338CA"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="ticket" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E2E8F0"/>
+    </linearGradient>
+  </defs>
+  <!-- App Icon Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)" />
+
+  <!-- The TPV Machine Base -->
+  <path d="M120 320h272c20 0 36 16 36 36v40c0 20-16 36-36 36H120c-20 0-36-16-36-36v-40c0-20 16-36 36-36z" fill="#334155" />
+  
+  <rect x="140" y="350" width="232" height="12" rx="6" fill="#475569"/>
+  <rect x="140" y="380" width="232" height="12" rx="6" fill="#475569"/>
+
+  <!-- Ticket paper -->
+  <path d="M176 110 h160 v170 l-20 20 l-20-20 l-20 20 l-20-20 l-20 20 l-20-20 l-20 20 l-20-20 v-170z" fill="url(#ticket)"/>
+  
+  <rect x="200" y="140" width="112" height="14" rx="7" fill="#CBD5E1"/>
+  <rect x="200" y="174" width="70" height="14" rx="7" fill="#CBD5E1"/>
+  <rect x="200" y="208" width="90" height="14" rx="7" fill="#CBD5E1"/>
+
+  <!-- Screen -->
+  <rect x="120" y="220" width="272" height="100" rx="16" fill="url(#screen)"/>
+  <rect x="140" y="240" width="232" height="60" rx="10" fill="#020617"/>
+  
+  <!-- Green check or value -->
+  <rect x="210" y="264" width="140" height="12" rx="6" fill="#10B981"/>
+  <circle cx="160" cy="270" r="8" fill="#38BDF8"/>
+  <circle cx="184" cy="270" r="8" fill="#38BDF8"/>
+  
+</svg>

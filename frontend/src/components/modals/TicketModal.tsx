@@ -21,11 +21,11 @@ export function TicketModal({ isOpen, onClose, orderType, tableNumber, dinersCou
             <div className="relative w-full max-w-[420px] bg-[#0E7D42] rounded-none shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col font-mono text-white p-8 print:max-w-none print:w-full print:border-none print:shadow-none print:rounded-none print:bg-white print:text-black">
                 {/* Cabecera del Recibo */}
                 <div className="text-center mb-8">
-                    <h2 className="text-2xl font-black mb-1">Anticapizza - ALCOY</h2>
-                    <p className="text-sm font-bold opacity-90">IGNÁCIO MIRÓ QUILES</p>
-                    <p className="text-xs opacity-80 mt-1">C.I.F: 21680848-J - Telf: 966338595</p>
-                    <p className="text-xs opacity-80">Santa Rosa, 42</p>
-                    <p className="text-xs opacity-80 mb-2">03802 Alcoy</p>
+                    <h2 className="text-2xl font-black mb-1">TpvFlow - Gandía</h2>
+                    <p className="text-sm font-bold opacity-90"></p>
+                    <p className="text-xs opacity-80 mt-1">C.I.F: 1234567-J - Telf: 999999999</p>
+                    <p className="text-xs opacity-80">Calle Falsa, 123</p>
+                    <p className="text-xs opacity-80 mb-2">46700 Gandía</p>
 
                     <div className="mt-4 pt-4 border-t-2 border-dashed border-white/30">
                         <h3 className="text-xl font-bold">Factura simplificada</h3>

@@ -13,7 +13,7 @@ let ProductsService = class ProductsService {
         return [
             { id: '1', categoryId: '1', name: 'ALITAS DE POLLO', price: 3.30 },
             { id: '2', categoryId: '1', name: 'Aros de cebolla', price: 1.80 },
-            { id: '3', categoryId: '1', name: 'COMBI ANTICA', price: 5.60 },
+            { id: '3', categoryId: '1', name: 'COMBI PIZZA', price: 5.60 },
             { id: '4', categoryId: '1', name: 'Croquetas de Ibericos', price: 2.60 },
             { id: '8', categoryId: '4', name: 'Pizza Margarita', price: 8.50, ingredients: ['Tomate', 'Mozzarella', 'Orégano'] },
             { id: '9', categoryId: '4', name: 'Pizza Prosciutto', price: 9.50, ingredients: ['Tomate', 'Mozzarella', 'Jamón York'] },

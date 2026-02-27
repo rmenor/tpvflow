@@ -1,7 +1,7 @@
 # TPV Pizzería - Documentación de Refactorización
 
 ## Objetivo
-Clonar la aplicación existente del TPV (Terminal Punto de Venta) para "Anticapizza", modernizando la arquitectura y la interfaz gráfica sin perder la funcionalidad original.
+Clonar la aplicación existente del TPV (Terminal Punto de Venta) para "TpvFlow", modernizando la arquitectura y la interfaz gráfica sin perder la funcionalidad original.
 
 ## Arquitectura
 
@@ -50,7 +50,7 @@ Al abrir o crear una comanda, la pantalla se divide en áreas clave clave para f
 **C. Visualización e Impresión de Ticket (Recibo)**
 - Pantalla verde detallando el recibo y un botón "Re-Imprimir Ticket".
 - Formato de ticket:
-  - Título/Empresa (ej. "Anticapizza - ALCOY")
+  - Título/Empresa (ej. "TpvFlow - Gandía")
   - Detalles de la empresa (CIF, Teléfono, Dirección)
   - Identificador central (ej. "Factura simplificada", "Ticket: 3200", "RECOGE EN LOCAL")
   - Tabla de compra (Cantidad, Artículo, Importe)

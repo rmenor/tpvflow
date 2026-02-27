@@ -13,7 +13,7 @@ export function Header({ currentEmployee, onOpenEmployeeModal, cart, onNavigateT
         <header className="h-20 flex items-center justify-between px-8 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-10">
             <div className="flex items-center gap-6">
                 <div className="font-black flex flex-col leading-none">
-                    <span className="text-indigo-600 text-xl tracking-tighter">Viejita</span>
+                    <span className="text-indigo-600 text-xl tracking-tighter">TpvFlow</span>
                     <span className="text-slate-400 text-xs tracking-widest uppercase">Pizza</span>
                 </div>
             </div>
@@ -26,6 +26,9 @@ export function Header({ currentEmployee, onOpenEmployeeModal, cart, onNavigateT
                     <button onClick={onNavigateToListados} className="px-5 py-2 text-sm font-bold rounded-xl transition-all duration-300 text-slate-500 hover:text-slate-800 hover:bg-slate-200/50">
                         Listados
                     </button>
+                    <Link href="/reservas" className="px-5 py-2 text-sm font-bold rounded-xl transition-all duration-300 text-slate-500 hover:text-slate-800 hover:bg-slate-200/50">
+                        Reservas
+                    </Link>
                 </nav>
                 <div className="w-px h-8 bg-slate-200 hidden lg:block"></div>
                 <div

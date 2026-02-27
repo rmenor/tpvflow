@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { Customer } from '../types';
 
 const MOCK_CLIENTS: Customer[] = [
-    { id: "1", name: "Ramon Menor", address: "C/ San Onofre 31", phone: "600 123 456" },
-    { id: "2", name: "Maria Garcia", address: "Av. Constitución 4, 2B", phone: "611 987 654" },
-    { id: "3", name: "Anticapizza", address: "Santa Rosa 42", phone: "966 338 595" },
-    { id: "4", name: "Carlos Perez", address: "Plaza España 1", phone: "622 345 678" }
+    { id: "1", name: "Ramon Menor", address: "C/ San Onofre 31", phone: "999 999 999" },
+    { id: "2", name: "Maria Garcia", address: "Av. Constitución 4, 2B", phone: "999 999 999" },
+    { id: "3", name: "Cliente 3", address: "Calle Falsa 123", phone: "999 999 999" },
+    { id: "4", name: "Cliente 4", address: "Calle Falsa 123", phone: "999 999 999" }
 ];
 
 export const useCustomers = () => {
