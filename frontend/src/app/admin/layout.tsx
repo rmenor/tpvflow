@@ -6,6 +6,7 @@ import {
     Users,
     Briefcase,
     ShoppingCart,
+    Calendar,
     LogOut,
 } from "lucide-react";
 
@@ -67,6 +68,13 @@ export default function AdminLayout({
                     >
                         <ShoppingCart className="w-5 h-5" />
                         <span className="font-medium">Comandas</span>
+                    </Link>
+                    <Link
+                        href="/admin/reservas"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-slate-800 text-slate-300 hover:text-white"
+                    >
+                        <Calendar className="w-5 h-5" />
+                        <span className="font-medium">Reservas</span>
                     </Link>
                     <Link
                         href="/admin/customers"
