@@ -51,8 +51,9 @@ El repositorio está dividido en dos principales directorios:
 
 ### `/backend` (NestJS)
 *   Back-end robusto manejado con **NestJS** en TypeScript.
+*   Conexión a base de datos **PostgreSQL** mediante **Prisma ORM**.
 *   Organizado en módulos (`Products`, `Categories`, `Customers`, `Orders`, `Employees`).
-*   Usa un archivo JSON de base de datos (`data/db.json`) ligero en entorno de desarrollo.
+*   Migración de almacenamiento temporal a una fuente única de verdad en base de datos transaccional, asegurando total sincronización en el cobro, configuración de pizzas y listados.
 
 ## Instalación y Arranque Rápido
 
@@ -88,8 +89,8 @@ El repositorio está dividido en dos principales directorios:
 
 *   [x] Integrar base de datos JSON en el Backend como fuente de verdad.
 *   [x] Generación de Modales de cobro interactivos (Efectivo y Tarjeta).
-*   [ ] Conexión base de datos real (PostgreSQL / MongoDB) con Prisma u ORM.
-*   [ ] Estadísticas e Informes avanzados.
+*   [x] Conexión base de datos real (PostgreSQL / MongoDB) con Prisma u ORM.
+*   [x] Sincronización en tiempo real del Dashboard (Estadísticas e Informes) y flujos del carrito (TPV).
 *   [ ] Impresión de tickets configurables mediante escPOS directamente a la red.
 
 ---
