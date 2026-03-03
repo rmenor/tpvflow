@@ -80,32 +80,44 @@ function TPVContent() {
 
   useEffect(() => {
     if (recoverId) {
-      const savedParked = localStorage.getItem("parked_orders");
-      if (savedParked) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const parkedFlow: any[] = JSON.parse(savedParked);
-        const orderToRecover = parkedFlow.find(o => o.id === recoverId);
-        if (orderToRecover) {
-          // eslint-disable-next-line react-hooks/set-state-in-effect
-          setCart(orderToRecover.items || []);
-          if (orderToRecover.client && orderToRecover.client.id) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setSelectedClient(orderToRecover.client);
+      const fetchRecoverOrder = async () => {
+        try {
+          const res = await fetch(`${API_URL}/api/orders/${recoverId}`);
+          if (res.ok) {
+            const orderToRecover = await res.json();
+            if (orderToRecover) {
+              const mappedCart = (orderToRecover.items || []).map((orderItem: any) => {
+                // If it's already a product (e.g. from local storage fallback mapping or old API schema format)
+                if (orderItem.categoryId !== undefined) return orderItem;
+
+                // Map from OrderItem + Product relation to flat Product interface expected by Cart
+                return {
+                  ...(orderItem.product || {}), // Contains id (which will be overwritten), name, categoryId, etc
+                  id: orderItem.productId || orderItem.id,
+                  price: orderItem.product?.price || orderItem.unitPrice || 0,
+                  cartId: orderItem.id, // Keep the OrderItem ID as cartId to avoid React key collisions
+                  cartExtraCost: (orderItem.unitPrice || 0) - (orderItem.product?.price || 0)
+                };
+              });
+
+              setCart(mappedCart);
+              if (orderToRecover.customer) {
+                setSelectedClient(orderToRecover.customer);
+              }
+              setTableNumber(orderToRecover.tableNumber || "");
+              setDinersCount(orderToRecover.dinersCount || 2);
+              setOrderType(orderToRecover.type || orderToRecover.orderType || "LOCAL");
+              setCurrentOrderId(orderToRecover.id);
+
+              router.replace('/tpv');
+            }
           }
-          // eslint-disable-next-line react-hooks/set-state-in-effect
-          setTableNumber(orderToRecover.tableNumber || "");
-          // eslint-disable-next-line react-hooks/set-state-in-effect
-          setDinersCount(orderToRecover.dinersCount || 2);
-          // eslint-disable-next-line react-hooks/set-state-in-effect
-          setOrderType(orderToRecover.orderType || "LOCAL");
-          // eslint-disable-next-line react-hooks/set-state-in-effect
-          setCurrentOrderId(orderToRecover.id);
-
-          // DO NOT delete it from parked here, so it's not lost if user navigates away.
-
-          router.replace('/tpv');
+        } catch (error) {
+          console.error("Error recovering order:", error);
         }
-      }
+      };
+
+      fetchRecoverOrder();
     }
   }, [recoverId, router, setCart, setSelectedClient]);
 
@@ -124,72 +136,96 @@ function TPVContent() {
     setCurrentPizza(null);
   };
 
-  const handleParkOrder = () => {
+  const handleParkOrder = async () => {
     if (cart.length === 0 && !currentOrderId) return;
 
-    // Create new order object keeping the existing ID or a new one
-    const newOrder: Order = {
-      id: currentOrderId || Date.now().toString(),
-      items: cart,
-      itemsCount: cart.length,
-      total,
-      orderType,
-      client: selectedClient,
-      tableNumber,
-      dinersCount,
-      date: new Date().toISOString(),
-      // Remove 'reservado' status since it's actively parked now
-      status: "aparcado"
-    };
+    try {
+      const orderData = {
+        items: cart,
+        itemsCount: cart.length,
+        total,
+        totalNeto: total,
+        type: orderType,
+        orderType, // Retained purely for frontend compat context
+        client: selectedClient,
+        tableNumber,
+        dinersCount,
+        date: new Date().toISOString(),
+        status: "aparcado"
+      };
 
-    const savedParked = localStorage.getItem("parked_orders");
-    const parkedFlow = savedParked ? JSON.parse(savedParked) : [];
+      let endpoint = `${API_URL}/api/orders`;
+      let method = "POST";
 
-    // Filter out the old version if it existed
-    const updatedFlow = parkedFlow.filter((o: Order) => o.id !== newOrder.id);
+      // UUID verification
+      if (currentOrderId && currentOrderId.includes("-")) {
+        endpoint = `${API_URL}/api/orders/${currentOrderId}`;
+        method = "PUT";
+      }
 
-    localStorage.setItem("parked_orders", JSON.stringify([newOrder, ...updatedFlow]));
+      const res = await fetch(endpoint, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData)
+      });
 
-    setCurrentKitchenOrder(newOrder);
-    setIsKitchenTicketModalOpen(true);
-    clearCart();
-    setTableNumber("");
-    setDinersCount(2);
-    setCurrentOrderId(null);
-    deselectClient();
+      if (!res.ok) throw new Error("Error at API");
+
+      const savedOrder = await res.json();
+      setCurrentKitchenOrder({ ...savedOrder, items: cart });
+      setIsKitchenTicketModalOpen(true);
+      clearCart();
+      setTableNumber("");
+      setDinersCount(2);
+      setCurrentOrderId(null);
+      deselectClient();
+    } catch (err) {
+      console.error("Error to park order:", err);
+      alert("Error al guardar o actualizar en la API.");
+    }
   };
 
+  const handleConfirmPayment = async (method: "EFECTIVO" | "TARJETA", tendered: string) => {
+    try {
+      const orderData = {
+        items: cart,
+        itemsCount: cart.length,
+        total,
+        totalNeto: total,
+        type: orderType,
+        orderType,
+        client: selectedClient,
+        paymentMethod: method,
+        tenderedAmount: method === "EFECTIVO" ? tendered : null,
+        tableNumber,
+        dinersCount,
+        date: new Date().toISOString(),
+        status: "PAGADO"
+      };
 
-  const handleConfirmPayment = (method: "EFECTIVO" | "TARJETA", tendered: string) => {
-    const newPaidOrder = {
-      id: Date.now().toString(),
-      items: cart,
-      itemsCount: cart.length,
-      total,
-      orderType,
-      client: selectedClient,
-      paymentMethod: method,
-      tenderedAmount: method === "EFECTIVO" ? tendered : null,
-      tableNumber,
-      dinersCount,
-      date: new Date().toISOString()
-    };
-    const savedPaid = localStorage.getItem("paid_orders");
-    const paidFlow = savedPaid ? JSON.parse(savedPaid) : [];
-    localStorage.setItem("paid_orders", JSON.stringify([newPaidOrder, ...paidFlow]));
+      let endpoint = `${API_URL}/api/orders`;
+      let reqMethod = "POST";
 
-    if (currentOrderId) {
-      const savedParked = localStorage.getItem("parked_orders");
-      if (savedParked) {
-        const parkedFlow: Order[] = JSON.parse(savedParked);
-        const updatedParked = parkedFlow.filter(o => o.id !== currentOrderId);
-        localStorage.setItem("parked_orders", JSON.stringify(updatedParked));
+      if (currentOrderId && currentOrderId.includes("-")) {
+        endpoint = `${API_URL}/api/orders/${currentOrderId}`;
+        reqMethod = "PUT";
       }
-    }
 
-    setCurrentOrderId(null);
-    setIsPaymentModalOpen(false);
-    setIsTicketModalOpen(true);
+      const res = await fetch(endpoint, {
+        method: reqMethod,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData)
+      });
+
+      if (!res.ok) throw new Error("Error updating API");
+
+      setCurrentOrderId(null);
+      setIsPaymentModalOpen(false);
+      setIsTicketModalOpen(true);
+    } catch (err) {
+      console.error("Failed to pay order via API:", err);
+      alert("Error de pago en la API.");
+    }
   };
 
   const handleLogout = () => {

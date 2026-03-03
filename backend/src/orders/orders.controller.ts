@@ -10,6 +10,11 @@ export class OrdersController {
         return this.ordersService.findAll(status);
     }
 
+    @Get(':id')
+    findOne(@Param('id') id: string) {
+        return this.ordersService.findOne(id);
+    }
+
     @Post()
     create(@Body() data: any) {
         return this.ordersService.create(data);

@@ -9,7 +9,14 @@ export class OrdersService {
         return this.prisma.order.findMany({
             where: status ? { status } : undefined,
             orderBy: { createdAt: 'desc' },
-            include: { customer: true }
+            include: { customer: true, items: { include: { product: true } } }
+        });
+    }
+
+    findOne(id: string) {
+        return this.prisma.order.findUnique({
+            where: { id },
+            include: { customer: true, items: { include: { product: true } } }
         });
     }
 
@@ -24,9 +31,17 @@ export class OrdersService {
                 ...rest,
                 total: rest.total || 0,
                 itemsCount: items?.length || rest.itemsCount || 0,
-                ...(cId ? { customerId: cId } : {})
+                ...(cId ? { customerId: cId } : {}),
+                items: {
+                    create: items?.map((item: any) => ({
+                        productId: item.id || item.productId,
+                        quantity: 1,
+                        unitPrice: item.price + (item.cartExtraCost || 0),
+                        totalPrice: item.price + (item.cartExtraCost || 0)
+                    })) || []
+                }
             },
-            include: { customer: true }
+            include: { customer: true, items: { include: { product: true } } }
         });
     }
 
@@ -43,9 +58,18 @@ export class OrdersService {
             data: {
                 ...rest,
                 itemsCount: items?.length || rest.itemsCount || 0,
-                ...(cId ? { customerId: cId } : {})
+                ...(cId ? { customerId: cId } : {}),
+                items: {
+                    deleteMany: {},
+                    create: items?.map((item: any) => ({
+                        productId: item.id || item.productId,
+                        quantity: 1,
+                        unitPrice: item.price + (item.cartExtraCost || 0),
+                        totalPrice: item.price + (item.cartExtraCost || 0)
+                    })) || []
+                }
             },
-            include: { customer: true }
+            include: { customer: true, items: { include: { product: true } } }
         });
     }
 
