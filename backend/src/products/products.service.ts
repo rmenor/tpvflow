@@ -1,20 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import * as fs from 'fs';
-import * as path from 'path';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ProductsService {
+    constructor(private prisma: PrismaService) { }
+
     findAll() {
-        const dbPath = path.resolve(process.cwd(), 'data/db.json');
-        if (!fs.existsSync(dbPath)) return [];
-        const data = fs.readFileSync(dbPath, 'utf8');
-        return JSON.parse(data).products || [];
+        return this.prisma.product.findMany({
+            include: {
+                category: true,
+            },
+            orderBy: { name: 'asc' },
+        });
     }
 
     findExtraIngredients() {
-        const dbPath = path.resolve(process.cwd(), 'data/db.json');
-        if (!fs.existsSync(dbPath)) return [];
-        const data = fs.readFileSync(dbPath, 'utf8');
-        return JSON.parse(data).extraIngredients || [];
+        return this.prisma.extraIngredient.findMany({
+            orderBy: { name: 'asc' },
+        });
     }
 }
