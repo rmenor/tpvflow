@@ -120,7 +120,7 @@ export default function EmployeeAdminModal({ isOpen, onClose, onSave, initialDat
                                 maxLength={4}
                                 value={pin}
                                 onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow tracking-widest font-mono"
+                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow tracking-widest font-mono"
                                 placeholder="0000"
                             />
                         </div>
@@ -135,7 +135,7 @@ export default function EmployeeAdminModal({ isOpen, onClose, onSave, initialDat
                                 maxLength={2}
                                 value={initials}
                                 onChange={(e) => setInitials(e.target.value.toUpperCase())}
-                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow font-mono"
+                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow font-mono"
                                 placeholder="CP"
                             />
                         </div>

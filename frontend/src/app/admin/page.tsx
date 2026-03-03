@@ -1,6 +1,68 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { CircleDollarSign, PackageSearch, Users, ShoppingBag } from "lucide-react";
+import { API_URL } from "../../config/api";
+import { isSameDay, startOfDay } from "date-fns";
 
 export default function AdminDashboardPage() {
+    const [stats, setStats] = useState({
+        todayRevenue: 0,
+        completedOrders: 0,
+        productsCount: 0,
+        employeesCount: 0
+    });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                const [ordersRes, productsRes, employeesRes] = await Promise.all([
+                    fetch(`${API_URL}/api/orders`),
+                    fetch(`${API_URL}/api/products`),
+                    fetch(`${API_URL}/api/employees`)
+                ]);
+
+                const orders = await ordersRes.json();
+                const products = await productsRes.json();
+                const employees = await employeesRes.json();
+
+                // Calculate stats
+                const today = new Date();
+                let revenue = 0;
+                let completed = 0;
+
+                if (Array.isArray(orders)) {
+                    orders.forEach(order => {
+                        const orderDate = order.createdAt ? new Date(order.createdAt) : new Date();
+
+                        // Si la orden está pagada, sumamos al total de completadas
+                        if (order.status === 'PAGADO') {
+                            completed++;
+                            // Si además es de hoy, sumamos los ingresos
+                            if (isSameDay(orderDate, today)) {
+                                revenue += (order.totalNeto ?? order.total ?? order.totalBruto ?? 0);
+                            }
+                        }
+                    });
+                }
+
+                setStats({
+                    todayRevenue: revenue,
+                    completedOrders: completed,
+                    productsCount: Array.isArray(products) ? products.length : 0,
+                    employeesCount: Array.isArray(employees) ? employees.length : 0
+                });
+            } catch (err) {
+                console.error("Error fetching dashboard data:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, []);
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-2">
@@ -22,7 +84,9 @@ export default function AdminDashboardPage() {
                         </div>
                     </div>
                     <div>
-                        <p className="text-4xl font-extrabold text-gray-900">€2,450</p>
+                        <p className="text-4xl font-extrabold text-gray-900">
+                            {loading ? "..." : `€${stats.todayRevenue.toFixed(2)}`}
+                        </p>
                         <p className="text-sm font-medium text-gray-500 mt-1">Ingresos de hoy</p>
                     </div>
                 </div>
@@ -36,7 +100,9 @@ export default function AdminDashboardPage() {
                         </div>
                     </div>
                     <div>
-                        <p className="text-4xl font-extrabold text-gray-900">124</p>
+                        <p className="text-4xl font-extrabold text-gray-900">
+                            {loading ? "..." : stats.completedOrders}
+                        </p>
                         <p className="text-sm font-medium text-gray-500 mt-1">Comandas completadas</p>
                     </div>
                 </div>
@@ -50,7 +116,9 @@ export default function AdminDashboardPage() {
                         </div>
                     </div>
                     <div>
-                        <p className="text-4xl font-extrabold text-gray-900">32</p>
+                        <p className="text-4xl font-extrabold text-gray-900">
+                            {loading ? "..." : stats.productsCount}
+                        </p>
                         <p className="text-sm font-medium text-gray-500 mt-1">Productos en carta</p>
                     </div>
                 </div>
@@ -64,15 +132,17 @@ export default function AdminDashboardPage() {
                         </div>
                     </div>
                     <div>
-                        <p className="text-4xl font-extrabold text-gray-900">4</p>
+                        <p className="text-4xl font-extrabold text-gray-900">
+                            {loading ? "..." : stats.employeesCount}
+                        </p>
                         <p className="text-sm font-medium text-gray-500 mt-1">Empleados activos</p>
                     </div>
                 </div>
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center mt-12 bg-gradient-to-br from-indigo-50 to-white">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Configuración Inicial Exitosa</h2>
-                <p className="text-gray-600 max-w-lg mx-auto">Selecciona una de las opciones del menú lateral para administrar tus catálogos u operaciones del restaurante.</p>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Conexión con la Base de Datos</h2>
+                <p className="text-gray-600 max-w-lg mx-auto">Estas métricas se alimentan en tiempo real de tu base de datos de Supabase. El sistema TPV completo está operativo.</p>
             </div>
 
         </div>
