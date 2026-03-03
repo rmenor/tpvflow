@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShoppingCart, Eye, FileText, Search, SettingsTabs, Trash2 } from "lucide-react";
+import { ShoppingCart, Eye, FileText, Search, Trash2 } from "lucide-react";
 import { API_URL } from "../../../config/api";
 import { format } from "date-fns";
 

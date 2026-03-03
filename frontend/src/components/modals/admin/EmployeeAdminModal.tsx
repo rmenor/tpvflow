@@ -93,7 +93,7 @@ export default function EmployeeAdminModal({ isOpen, onClose, onSave, initialDat
                             required
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
+                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
                             placeholder="Ej. Carlos Perez"
                         />
                     </div>
@@ -105,7 +105,7 @@ export default function EmployeeAdminModal({ isOpen, onClose, onSave, initialDat
                                 required
                                 value={role}
                                 onChange={(e) => setRole(e.target.value)}
-                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
+                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
                             >
                                 <option value="Administrador">Administrador</option>
                                 <option value="Camarero">Camarero</option>

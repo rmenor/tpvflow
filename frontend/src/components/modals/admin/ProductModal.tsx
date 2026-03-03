@@ -88,7 +88,7 @@ export default function ProductModal({ isOpen, onClose, onSave, initialData }: P
                             required
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
+                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
                             placeholder="Ej. Pizza Margarita"
                         />
                     </div>
@@ -102,7 +102,7 @@ export default function ProductModal({ isOpen, onClose, onSave, initialData }: P
                                 required
                                 value={price}
                                 onChange={(e) => setPrice(e.target.value === "" ? "" : Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
+                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
                                 placeholder="0.00"
                             />
                         </div>
@@ -112,7 +112,7 @@ export default function ProductModal({ isOpen, onClose, onSave, initialData }: P
                                 required
                                 value={categoryId}
                                 onChange={(e) => setCategoryId(e.target.value)}
-                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
+                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
                             >
                                 <option value="" disabled>Selecciona...</option>
                                 {categories.map(cat => (
