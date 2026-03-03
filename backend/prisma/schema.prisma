@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+model Category {
+  id       String    @id @default(uuid())
+  name     String
+  order    Int?      @default(0)
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  price       Float
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  ingredients String[]
+
+  orderItems  OrderItem[]
+
+  @@map("products")
+}
+
+model ExtraIngredient {
+  id    String @id @default(uuid())
+  name  String
+  price Float
+
+  @@map("extra_ingredients")
+}
+
+model Employee {
+  id       String @id @default(uuid())
+  name     String
+  initials String
+  pin      String
+  role     String
+  color    String
+
+  @@map("employees")
+}
+
+model Customer {
+  id      String  @id @default(uuid())
+  name    String
+  address String?
+  phone   String?
+  points  Int?    @default(0)
+
+  orders  Order[]
+
+  @@map("customers")
+}
+
+model Order {
+  id          String   @id @default(uuid())
+  ticketId    Int      @unique @default(autoincrement())
+  type        String   
+  status      String   @default("EN_PROGRESO")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  customerId  String?
+  customer    Customer? @relation(fields: [customerId], references: [id])
+
+  items       OrderItem[]
+
+  totalBruto  Float    @default(0.0)
+  discount    Float    @default(0.0)
+  totalNeto   Float    @default(0.0)
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  
+  quantity   Int      @default(1)
+  unitPrice  Float
+  totalPrice Float
+
+  @@map("order_items")
+}
