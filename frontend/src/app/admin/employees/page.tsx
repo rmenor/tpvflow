@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Briefcase, Plus, Edit2, Trash2 } from "lucide-react";
 import { API_URL } from "../../../config/api";
+import EmployeeAdminModal from "../../../components/modals/admin/EmployeeAdminModal";
 
 type Employee = {
     id: string;
@@ -16,6 +17,37 @@ type Employee = {
 export default function EmployeesAdminPage() {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingItem, setEditingItem] = useState<Employee | null>(null);
+
+    const handleSave = async (data: Omit<Employee, 'id'> & { id?: string }) => {
+        try {
+            const method = data.id ? 'PUT' : 'POST';
+            const url = data.id ? `${API_URL}/api/employees/${data.id}` : `${API_URL}/api/employees`;
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            if (!res.ok) throw new Error('Error al guardar');
+            const savedItem = await res.json();
+            if (data.id) {
+                setEmployees(employees.map(e => e.id === savedItem.id ? savedItem : e));
+            } else {
+                setEmployees([...employees, savedItem]);
+            }
+            setIsModalOpen(false);
+            setEditingItem(null);
+        } catch (err) {
+            console.error(err);
+            alert('Error al guardar');
+        }
+    };
+
+    const handleEdit = (employee: Employee) => {
+        setEditingItem(employee);
+        setIsModalOpen(true);
+    };
 
     useEffect(() => {
         fetch(`${API_URL}/api/employees`)
@@ -52,7 +84,10 @@ export default function EmployeesAdminPage() {
                         Gestiona los accesos, PINs y roles de tu personal.
                     </p>
                 </div>
-                <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 shadow-sm transition-colors active:scale-95">
+                <button
+                    onClick={() => { setEditingItem(null); setIsModalOpen(true); }}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 shadow-sm transition-colors active:scale-95"
+                >
                     <Plus className="w-5 h-5" />
                     Nuevo Empleado
                 </button>
@@ -110,7 +145,10 @@ export default function EmployeesAdminPage() {
                                         </td>
                                         <td className="p-4">
                                             <div className="flex justify-end gap-2">
-                                                <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                                                <button
+                                                    onClick={() => handleEdit(employee)}
+                                                    className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                                >
                                                     <Edit2 className="w-4 h-4" />
                                                 </button>
                                                 <button
@@ -128,6 +166,13 @@ export default function EmployeesAdminPage() {
                     </table>
                 </div>
             </div>
+
+            <EmployeeAdminModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSave={handleSave}
+                initialData={editingItem}
+            />
         </div>
     );
 }

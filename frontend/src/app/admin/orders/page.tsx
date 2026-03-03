@@ -1,6 +1,46 @@
-import { ShoppingCart, Eye, FileText, Search, SettingsTabs } from "lucide-react";
+"use client";
+
+import { useEffect, useState } from "react";
+import { ShoppingCart, Eye, FileText, Search, SettingsTabs, Trash2 } from "lucide-react";
+import { API_URL } from "../../../config/api";
+import { format } from "date-fns";
+
+type Order = {
+    id: string;
+    ticketId: number;
+    type: string;
+    status: string;
+    netTotal: number;
+    createdAt: string;
+};
 
 export default function OrdersAdminPage() {
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch(`${API_URL}/api/orders`)
+            .then((res) => res.json())
+            .then((data) => {
+                setOrders(data);
+                setLoading(false);
+            })
+            .catch((err) => {
+                console.error("Error fetching orders:", err);
+                setLoading(false);
+            });
+    }, []);
+
+    const handleDelete = async (id: string) => {
+        if (!confirm("¿Seguro que quieres eliminar esta comanda?")) return;
+        try {
+            await fetch(`${API_URL}/api/orders/${id}`, { method: "DELETE" });
+            setOrders(orders.filter((o) => o.id !== id));
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:justify-between items-start md:items-end gap-4">
@@ -41,68 +81,62 @@ export default function OrdersAdminPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            <tr className="hover:bg-gray-50 transition-colors">
-                                <td className="p-4">
-                                    <div className="flex items-center gap-2">
-                                        <FileText className="w-4 h-4 text-gray-400" />
-                                        <span className="font-mono font-bold text-gray-900">#3204</span>
-                                    </div>
-                                </td>
-                                <td className="p-4 text-sm text-gray-600">
-                                    14 Feb 2026, 20:45
-                                </td>
-                                <td className="p-4">
-                                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-800">
-                                        DOMICILIO
-                                    </span>
-                                </td>
-                                <td className="p-4">
-                                    <div className="flex items-center gap-1.5">
-                                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                        <span className="text-sm font-medium text-gray-700">PAGADO</span>
-                                    </div>
-                                </td>
-                                <td className="p-4 text-right">
-                                    <span className="font-bold text-gray-900">€24.50</span>
-                                </td>
-                                <td className="p-4 text-right">
-                                    <button className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors inline-flex items-center gap-1 text-sm font-medium">
-                                        <Eye className="w-4 h-4" />
-                                        Ver
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr className="hover:bg-gray-50 transition-colors bg-gray-50/30">
-                                <td className="p-4">
-                                    <div className="flex items-center gap-2">
-                                        <FileText className="w-4 h-4 text-gray-400" />
-                                        <span className="font-mono font-bold text-gray-900">#3203</span>
-                                    </div>
-                                </td>
-                                <td className="p-4 text-sm text-gray-600">
-                                    14 Feb 2026, 20:10
-                                </td>
-                                <td className="p-4">
-                                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-800">
-                                        LOCAL
-                                    </span>
-                                </td>
-                                <td className="p-4">
-                                    <div className="flex items-center gap-1.5">
-                                        <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-                                        <span className="text-sm font-medium text-gray-700">EN PROGRESO</span>
-                                    </div>
-                                </td>
-                                <td className="p-4 text-right">
-                                    <span className="font-bold text-gray-900">€9.00</span>
-                                </td>
-                                <td className="p-4 text-right">
-                                    <button className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors inline-flex items-center gap-1 text-sm font-medium">
-                                        <Eye className="w-4 h-4" />
-                                        Ver
-                                    </button>
-                                </td>
-                            </tr>
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={6} className="p-8 text-center text-gray-400">
+                                        Cargando histórico de comandas...
+                                    </td>
+                                </tr>
+                            ) : orders.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="p-8 text-center text-gray-400">
+                                        No hay comandas registradas.
+                                    </td>
+                                </tr>
+                            ) : (
+                                orders.map((order) => (
+                                    <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                                        <td className="p-4">
+                                            <div className="flex items-center gap-2">
+                                                <FileText className="w-4 h-4 text-gray-400" />
+                                                <span className="font-mono font-bold text-gray-900">#{order.ticketId}</span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4 text-sm text-gray-600">
+                                            {format(new Date(order.createdAt), "dd MMM yyyy, HH:mm")}
+                                        </td>
+                                        <td className="p-4">
+                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${order.type === 'LOCAL' ? 'bg-slate-100 text-slate-800' : 'bg-emerald-100 text-emerald-800'
+                                                }`}>
+                                                {order.type}
+                                            </span>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex items-center gap-1.5">
+                                                <div className={`w-2 h-2 rounded-full ${order.status === 'PAGADO' ? 'bg-green-500' : 'bg-amber-500'}`}></div>
+                                                <span className="text-sm font-medium text-gray-700">{order.status}</span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <span className="font-bold text-gray-900">€{order.netTotal.toFixed(2)}</span>
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <button className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors inline-flex items-center gap-1 text-sm font-medium">
+                                                    <Eye className="w-4 h-4" />
+                                                    Ver
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(order.id)}
+                                                    className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
