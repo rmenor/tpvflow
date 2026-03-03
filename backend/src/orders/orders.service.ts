@@ -15,7 +15,7 @@ export class OrdersService {
 
     create(data: any) {
         // Strip out unknown relationship fields or map them
-        const { id, items, client, customer, customerId, ticketId, ...rest } = data;
+        const { id, items, client, customer, customerId, ticketId, orderType, ...rest } = data;
         let cId = customerId || client?.id || customer?.id;
         if (!cId) cId = undefined; // Do not pass null to string? relation if empty
 
@@ -31,7 +31,7 @@ export class OrdersService {
     }
 
     update(id: string, data: any) {
-        const { items, client, customer, customerId, ticketId, createdAt, updatedAt, ...rest } = data;
+        const { items, client, customer, customerId, ticketId, orderType, createdAt, updatedAt, ...rest } = data;
         let cId = customerId || client?.id || customer?.id;
         if (!cId) cId = undefined;
 
