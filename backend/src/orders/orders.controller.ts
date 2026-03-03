@@ -1,4 +1,4 @@
-import { Controller, Get, Delete, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 
 @Controller('api/orders')
@@ -6,8 +6,18 @@ export class OrdersController {
     constructor(private readonly ordersService: OrdersService) { }
 
     @Get()
-    findAll() {
-        return this.ordersService.findAll();
+    findAll(@Query('status') status?: string) {
+        return this.ordersService.findAll(status);
+    }
+
+    @Post()
+    create(@Body() data: any) {
+        return this.ordersService.create(data);
+    }
+
+    @Put(':id')
+    update(@Param('id') id: string, @Body() data: any) {
+        return this.ordersService.update(id, data);
     }
 
     @Delete(':id')

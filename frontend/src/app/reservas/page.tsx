@@ -8,6 +8,7 @@ import { ClientModal, NewClientModal } from "../../components/modals/ClientModal
 import { Customer, Employee, Order } from "../../types";
 import { format, startOfWeek, addDays, getDaysInMonth, startOfMonth, addMonths, subMonths, isSameDay, startOfDay, addWeeks, subWeeks, addDays as addDaysToDate, subDays } from "date-fns";
 import { es } from "date-fns/locale";
+import { API_URL } from "../../config/api";
 
 interface Reservation {
     id: string;
@@ -42,29 +43,7 @@ export default function ReservasPage() {
         return true;
     });
 
-    const [reservations, setReservations] = useState<Reservation[]>(() => {
-        if (typeof window === 'undefined') return [];
-        const savedParked = localStorage.getItem("parked_orders");
-        if (savedParked) {
-            try {
-                const parked = JSON.parse(savedParked);
-                return parked.filter((o: Order) => (o.status === 'reservado' || o.status === 'aparcado') && o.date).map((o: Order) => ({
-                    id: o.id,
-                    date: o.date!,
-                    time: o.time || "14:00",
-                    name: o.client?.name || "Sin nombre",
-                    partySize: o.dinersCount || 2,
-                    tableNumber: o.tableNumber || "",
-                    phone: o.client?.phone || "",
-                    status: o.status || "aparcado"
-                }));
-            } catch {
-                return [];
-            }
-        }
-        return [];
-    });
-
+    const [reservations, setReservations] = useState<Reservation[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newReservation, setNewReservation] = useState<{
         date: string; // The selected date for the new reservation
@@ -88,25 +67,25 @@ export default function ReservasPage() {
 
 
 
-    // Sync reservations when isModalOpen changes (e.g. after adding one)
     useEffect(() => {
-        if (typeof window === 'undefined') return;
-        const savedParked = localStorage.getItem("parked_orders");
-        if (savedParked) {
-            const parked: Order[] = JSON.parse(savedParked);
-            const validRes = parked.filter((o: Order) => (o.status === 'reservado' || o.status === 'aparcado') && o.date).map((o: Order) => ({
-                id: o.id,
-                date: o.date!,
-                time: o.time || "14:00",
-                name: o.client?.name || "Sin nombre",
-                partySize: o.dinersCount || 2,
-                tableNumber: o.tableNumber || "",
-                phone: o.client?.phone || "",
-                status: o.status || "aparcado"
-            }));
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setReservations(validRes);
-        }
+        fetch(`${API_URL}/api/orders`)
+            .then(res => res.json())
+            .then(data => {
+                const validRes = data
+                    .filter((o: any) => (o.status === 'reservado' || o.status === 'aparcado') && o.date)
+                    .map((o: any) => ({
+                        id: o.id,
+                        date: o.date!,
+                        time: o.time || "14:00",
+                        name: o.customer?.name || o.client?.name || "Sin nombre",
+                        partySize: o.dinersCount || 2,
+                        tableNumber: o.tableNumber || "",
+                        phone: o.customer?.phone || o.client?.phone || "",
+                        status: o.status || "aparcado"
+                    }));
+                setReservations(validRes);
+            })
+            .catch(err => console.error("Error fetching reservations:", err));
     }, [isModalOpen]);
 
     // When opening the modal, default the reservation date to the currently inspected date
@@ -115,44 +94,34 @@ export default function ReservasPage() {
         setIsModalOpen(true);
     };
 
-    const handleSaveReservation = (client: Customer) => {
+    const handleSaveReservation = async (client: Customer) => {
         if (!newReservation.time || !newReservation.tableNumber || !newReservation.date) return;
 
-        const newResId = Date.now().toString();
-
-        const newRes: Reservation = {
-            id: newResId,
-            date: newReservation.date,
-            time: newReservation.time,
-            name: client.name,
-            partySize: newReservation.partySize,
-            tableNumber: newReservation.tableNumber,
-            phone: client.phone || "",
-            status: "reservado"
-        };
-
-        // EXTRA LOGIC FOR TICKETING: Park this reservation as a ticket
         const newOrder = {
-            id: newResId,
-            items: [],
-            itemsCount: 0,
-            total: 0,
+            type: "LOCAL",
             orderType: "LOCAL",
             client: client,
             tableNumber: newReservation.tableNumber,
             dinersCount: newReservation.partySize,
             status: "reservado",
             date: newReservation.date,
-            time: newReservation.time
+            time: newReservation.time,
+            total: 0,
+            itemsCount: 0
         };
-        const savedParked = localStorage.getItem("parked_orders");
-        const parkedFlow = savedParked ? JSON.parse(savedParked) : [];
-        localStorage.setItem("parked_orders", JSON.stringify([newOrder, ...parkedFlow]));
 
-        // Immediately update state so it shows up wihout waiting for effect
-        setReservations((prev) => [...prev, newRes]);
+        try {
+            await fetch(`${API_URL}/api/orders`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(newOrder),
+            });
+            // State is updated by useEffect when modal closes
+        } catch (error) {
+            console.error("Error saving reservation:", error);
+        }
+
         setIsModalOpen(false);
-
         setNewReservation({
             date: format(selectedDate, 'yyyy-MM-dd'),
             time: "14:00",

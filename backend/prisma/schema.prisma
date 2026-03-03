@@ -76,6 +76,15 @@ model Order {
   discount    Float    @default(0.0)
   totalNeto   Float    @default(0.0)
 
+  // Frontend extra fields mappings
+  total       Float    @default(0.0)
+  itemsCount  Int      @default(0)
+  tableNumber String?
+  dinersCount Int?     @default(1)
+  paymentMethod String?
+  date        String?
+  time        String?
+
   @@map("orders")
 }
 

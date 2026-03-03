@@ -8,16 +8,8 @@ import { API_URL } from "../../config/api";
 
 export default function ListadosPage() {
   const router = useRouter();
-  const [parkedOrders, setParkedOrders] = useState<Order[]>(() => {
-    if (typeof window === 'undefined') return [];
-    const saved = localStorage.getItem("parked_orders");
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [paidOrders, setPaidOrders] = useState<Order[]>(() => {
-    if (typeof window === 'undefined') return [];
-    const saved = localStorage.getItem("paid_orders");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [parkedOrders, setParkedOrders] = useState<Order[]>([]);
+  const [paidOrders, setPaidOrders] = useState<Order[]>([]);
   const [activeList, setActiveList] = useState<"APARCADAS" | "COBRADAS">("APARCADAS");
 
   // Estados de Empleado y Acceso
@@ -39,22 +31,54 @@ export default function ListadosPage() {
   const [pinError, setPinError] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
 
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/orders`);
+      const allOrders = await res.json();
+
+      const parked = allOrders.filter((o: any) => o.status === 'aparcado' || o.status === 'reservado').map((o: any) => ({
+        ...o,
+        client: o.customer || o.client,
+        type: o.type || o.orderType || "LOCAL",
+        orderType: o.orderType || o.type || "LOCAL"
+      }));
+
+      const paid = allOrders.filter((o: any) => o.status === 'cobrada').map((o: any) => ({
+        ...o,
+        client: o.customer || o.client,
+        type: o.type || o.orderType || "LOCAL",
+        orderType: o.orderType || o.type || "LOCAL"
+      }));
+
+      setParkedOrders(parked);
+      setPaidOrders(paid);
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+    }
+  };
+
   useEffect(() => {
     fetch(`${API_URL}/api/employees`)
       .then(res => res.json())
       .then(data => setEmployees(data))
       .catch(err => console.error("Error fetching employees:", err));
-  }, []);
+
+    fetchOrders();
+  }, [activeList]);
 
 
   const recoverOrder = (id: string) => {
     router.push(`/tpv?recover=${id}`);
   };
 
-  const deleteOrder = (id: string) => {
-    const updated = parkedOrders.filter(o => o.id !== id);
-    setParkedOrders(updated);
-    localStorage.setItem("parked_orders", JSON.stringify(updated));
+  const deleteOrder = async (id: string) => {
+    if (!confirm("¿Seguro que quieres borrar este ticket?")) return;
+    try {
+      await fetch(`${API_URL}/api/orders/${id}`, { method: 'DELETE' });
+      fetchOrders();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
