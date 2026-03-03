@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CircleDollarSign, PackageSearch, Users, ShoppingBag } from "lucide-react";
+import { CircleDollarSign, PackageSearch, Users, ShoppingBag, Calendar } from "lucide-react";
 import { API_URL } from "../../config/api";
 import { isSameDay, startOfDay } from "date-fns";
 
@@ -9,6 +9,7 @@ export default function AdminDashboardPage() {
     const [stats, setStats] = useState({
         todayRevenue: 0,
         completedOrders: 0,
+        reservationsCount: 0,
         productsCount: 0,
         employeesCount: 0
     });
@@ -31,10 +32,16 @@ export default function AdminDashboardPage() {
                 const today = new Date();
                 let revenue = 0;
                 let completed = 0;
+                let reservations = 0;
 
                 if (Array.isArray(orders)) {
                     orders.forEach(order => {
                         const orderDate = order.createdAt ? new Date(order.createdAt) : new Date();
+
+                        // Reservas
+                        if (order.status === 'reservado') {
+                            reservations++;
+                        }
 
                         // Si la orden está pagada, sumamos al total de completadas
                         if (order.status === 'PAGADO') {
@@ -50,6 +57,7 @@ export default function AdminDashboardPage() {
                 setStats({
                     todayRevenue: revenue,
                     completedOrders: completed,
+                    reservationsCount: reservations,
                     productsCount: Array.isArray(products) ? products.length : 0,
                     employeesCount: Array.isArray(employees) ? employees.length : 0
                 });
@@ -74,7 +82,7 @@ export default function AdminDashboardPage() {
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                 {/* Metric 1 */}
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col gap-4 relative overflow-hidden group hover:shadow-md transition-shadow">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full -z-10 transition-transform group-hover:scale-110"></div>
@@ -103,11 +111,27 @@ export default function AdminDashboardPage() {
                         <p className="text-4xl font-extrabold text-gray-900">
                             {loading ? "..." : stats.completedOrders}
                         </p>
-                        <p className="text-sm font-medium text-gray-500 mt-1">Comandas completadas</p>
+                        <p className="text-sm font-medium text-gray-500 mt-1">Comandas pagadas</p>
                     </div>
                 </div>
 
-                {/* Metric 3 */}
+                {/* Metric 3: Reservas */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col gap-4 relative overflow-hidden group hover:shadow-md transition-shadow">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-sky-50 rounded-bl-full -z-10 transition-transform group-hover:scale-110"></div>
+                    <div className="flex justify-between items-start">
+                        <div className="p-3 bg-sky-100 text-sky-600 rounded-xl">
+                            <Calendar className="w-6 h-6" />
+                        </div>
+                    </div>
+                    <div>
+                        <p className="text-4xl font-extrabold text-gray-900">
+                            {loading ? "..." : stats.reservationsCount}
+                        </p>
+                        <p className="text-sm font-medium text-gray-500 mt-1">Mesas reservadas</p>
+                    </div>
+                </div>
+
+                {/* Metric 4 */}
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col gap-4 relative overflow-hidden group hover:shadow-md transition-shadow">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-bl-full -z-10 transition-transform group-hover:scale-110"></div>
                     <div className="flex justify-between items-start">
@@ -123,7 +147,7 @@ export default function AdminDashboardPage() {
                     </div>
                 </div>
 
-                {/* Metric 4 */}
+                {/* Metric 5 */}
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col gap-4 relative overflow-hidden group hover:shadow-md transition-shadow">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-rose-50 rounded-bl-full -z-10 transition-transform group-hover:scale-110"></div>
                     <div className="flex justify-between items-start">
