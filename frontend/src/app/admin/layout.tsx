@@ -115,7 +115,7 @@ export default function AdminLayout({
                 </header>
 
                 <div className="flex-1 overflow-auto p-8 custom-scrollbar">
-                    <div className="max-w-7xl mx-auto">
+                    <div className="w-full">
                         {children}
                     </div>
                 </div>

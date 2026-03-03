@@ -10,4 +10,16 @@ export class EmployeesService {
             orderBy: { name: 'asc' },
         });
     }
+
+    create(data: { name: string; initials: string; pin: string; role: string; color: string }) {
+        return this.prisma.employee.create({ data });
+    }
+
+    update(id: string, data: any) {
+        return this.prisma.employee.update({ where: { id }, data });
+    }
+
+    remove(id: string) {
+        return this.prisma.employee.delete({ where: { id } });
+    }
 }

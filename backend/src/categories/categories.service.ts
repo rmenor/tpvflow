@@ -10,4 +10,16 @@ export class CategoriesService {
       orderBy: { order: 'asc' },
     });
   }
+
+  create(data: { name: string; order?: number }) {
+    return this.prisma.category.create({ data });
+  }
+
+  update(id: string, data: { name?: string; order?: number }) {
+    return this.prisma.category.update({ where: { id }, data });
+  }
+
+  remove(id: string) {
+    return this.prisma.category.delete({ where: { id } });
+  }
 }
