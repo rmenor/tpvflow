@@ -10,7 +10,8 @@ type Order = {
     ticketId: number;
     type: string;
     status: string;
-    netTotal: number;
+    totalNeto?: number;
+    total?: number;
     createdAt: string;
 };
 
@@ -118,7 +119,7 @@ export default function OrdersAdminPage() {
                                             </div>
                                         </td>
                                         <td className="p-4 text-right">
-                                            <span className="font-bold text-gray-900">€{order.netTotal.toFixed(2)}</span>
+                                            <span className="font-bold text-gray-900">€{((order.totalNeto ?? order.total) || 0).toFixed(2)}</span>
                                         </td>
                                         <td className="p-4 text-right">
                                             <div className="flex justify-end gap-2">
