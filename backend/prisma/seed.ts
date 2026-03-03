@@ -1,8 +1,20 @@
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const prisma = new PrismaClient();
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+const dbUrl = new URL(process.env.DATABASE_URL!);
+dbUrl.searchParams.delete('sslmode');
+const pool = new Pool({
+    connectionString: dbUrl.toString(),
+    ssl: { rejectUnauthorized: false },
+});
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
     // 1. Leer db.json
@@ -31,6 +43,14 @@ async function main() {
 
     console.log('Sembrando productos...');
     for (const prod of dbData.products) {
+        // Verificar si la categoría existe, si no, crearla al vuelo
+        const catExists = await prisma.category.findUnique({ where: { id: prod.categoryId } });
+        if (!catExists) {
+            await prisma.category.create({
+                data: { id: prod.categoryId, name: `CATEGORÍA ${prod.categoryId}` }
+            });
+        }
+
         await prisma.product.create({
             data: {
                 id: prod.id,
